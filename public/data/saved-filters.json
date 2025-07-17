@@ -1,0 +1,21 @@
+[
+  {
+    "id": "1",
+    "name": "Active High Priority",
+    "filters": {
+      "status": ["active"],
+      "category": ["Active"],
+      "progressRange": "76-100"
+    },
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  {
+    "id": "2",
+    "name": "Failed Processes",
+    "filters": {
+      "status": ["failed"],
+      "stage": ["Failed", "Error", "Timeout"]
+    },
+    "createdAt": "2024-01-14T14:20:00.000Z"
+  }
+]

@@ -1,0 +1,122 @@
+/* Material 3 Design Tokens */
+:root {
+  /* Primary Colors */
+  --primary: 40 80% 46%;
+  --on-primary: 0 0% 100%;
+  --primary-container: 40 80% 90%;
+  --on-primary-container: 40 80% 10%;
+
+  /* Secondary Colors */
+  --secondary: 220 14% 56%;
+  --on-secondary: 0 0% 100%;
+  --secondary-container: 220 14% 90%;
+  --on-secondary-container: 220 14% 10%;
+
+  /* Tertiary Colors */
+  --tertiary: 142 70% 45%;
+  --on-tertiary: 0 0% 100%;
+  --tertiary-container: 142 70% 90%;
+  --on-tertiary-container: 142 70% 10%;
+
+  /* Error Colors */
+  --error: 0 84% 60%;
+  --on-error: 0 0% 100%;
+  --error-container: 0 84% 95%;
+  --on-error-container: 0 84% 10%;
+
+  /* Surface Colors */
+  --surface: 0 0% 99%;
+  --on-surface: 0 0% 10%;
+  --surface-variant: 0 0% 94%;
+  --on-surface-variant: 0 0% 44%;
+  --surface-container: 0 0% 96%;
+  --surface-container-high: 0 0% 92%;
+
+  /* Outline Colors */
+  --outline: 0 0% 74%;
+  --outline-variant: 0 0% 82%;
+
+  /* Typography */
+  --title-large: 22px;
+  --title-medium: 16px;
+  --title-small: 14px;
+  --body-large: 16px;
+  --body-medium: 14px;
+  --body-small: 12px;
+  --label-large: 14px;
+  --label-medium: 12px;
+  --label-small: 11px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Primary Colors */
+    --primary: 40 80% 70%;
+    --on-primary: 40 80% 10%;
+    --primary-container: 40 80% 20%;
+    --on-primary-container: 40 80% 90%;
+
+    /* Secondary Colors */
+    --secondary: 220 14% 70%;
+    --on-secondary: 220 14% 10%;
+    --secondary-container: 220 14% 20%;
+    --on-secondary-container: 220 14% 90%;
+
+    /* Tertiary Colors */
+    --tertiary: 142 70% 65%;
+    --on-tertiary: 142 70% 10%;
+    --tertiary-container: 142 70% 20%;
+    --on-tertiary-container: 142 70% 90%;
+
+    /* Error Colors */
+    --error: 0 84% 80%;
+    --on-error: 0 84% 10%;
+    --error-container: 0 84% 20%;
+    --on-error-container: 0 84% 90%;
+
+    /* Surface Colors */
+    --surface: 0 0% 6%;
+    --on-surface: 0 0% 90%;
+    --surface-variant: 0 0% 14%;
+    --on-surface-variant: 0 0% 70%;
+    --surface-container: 0 0% 10%;
+    --surface-container-high: 0 0% 18%;
+
+    /* Outline Colors */
+    --outline: 0 0% 40%;
+    --outline-variant: 0 0% 28%;
+  }
+}
+
+/* Typography Classes */
+.text-title-large { font-size: var(--title-large); font-weight: 400; line-height: 1.3; }
+.text-title-medium { font-size: var(--title-medium); font-weight: 500; line-height: 1.4; }
+.text-title-small { font-size: var(--title-small); font-weight: 500; line-height: 1.4; }
+.text-body-large { font-size: var(--body-large); font-weight: 400; line-height: 1.5; }
+.text-body-medium { font-size: var(--body-medium); font-weight: 400; line-height: 1.4; }
+.text-body-small { font-size: var(--body-small); font-weight: 400; line-height: 1.3; }
+.text-label-large { font-size: var(--label-large); font-weight: 500; line-height: 1.4; }
+.text-label-medium { font-size: var(--label-medium); font-weight: 500; line-height: 1.3; }
+.text-label-small { font-size: var(--label-small); font-weight: 500; line-height: 1.2; }
+
+/* Surface Colors */
+.bg-surface { background-color: hsl(var(--surface)); }
+.bg-surface-container { background-color: hsl(var(--surface-container)); }
+.bg-surface-variant { background-color: hsl(var(--surface-variant)); }
+.bg-primary { background-color: hsl(var(--primary)); }
+.bg-secondary-container { background-color: hsl(var(--secondary-container)); }
+.bg-tertiary { background-color: hsl(var(--tertiary)); }
+.bg-error { background-color: hsl(var(--error)); }
+
+/* Text Colors */
+.text-on-surface { color: hsl(var(--on-surface)); }
+.text-on-surface-variant { color: hsl(var(--on-surface-variant)); }
+.text-on-primary { color: hsl(var(--on-primary)); }
+.text-on-secondary-container { color: hsl(var(--on-secondary-container)); }
+.text-on-tertiary { color: hsl(var(--on-tertiary)); }
+.text-on-error { color: hsl(var(--on-error)); }
+.text-primary { color: hsl(var(--primary)); }
+
+/* Border Colors */
+.border-outline-variant { border-color: hsl(var(--outline-variant)); }

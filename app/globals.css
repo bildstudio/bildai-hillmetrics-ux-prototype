@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '../styles/material3-tokens.css';
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Default background for the entire app (body) */
+    --foreground: 222.2 84% 4.9%; /* Default text color */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Custom colors for sidebar */
+    --sidebar-background: 187 100% 4.5%; /* #001417 */
+    --sidebar-foreground: 210 40% 98%; /* Light text for dark sidebar */
+    --sidebar-border: 187 50% 10%; /* Slightly lighter than background for border */
+    --sidebar-hover-background: 187 60% 8.6%; /* #061F22 */
+    --sidebar-active-background: 187 50% 11.6%; /* #0B2A2E */
+    --sidebar-hover-foreground: 210 40% 98%; /* Light text on hover */
+    --sidebar-active-foreground: 210 40% 98%; /* Light text on active */
+    --sidebar-ring: 187 77% 40%; /* Focus ring color */
+
+    /* Custom colors for Brand Primary (New Flux button) */
+    --brand-primary: 187 77% 30.6%; /* #0D7B89 */
+    --brand-primary-foreground: 0 0% 100%; /* White text */
+    --brand-primary-dark: 187 77% 25%; /* Slightly darker for hover */
+    --brand-primary-focus-ring: 187 77% 40%; /* Focus ring color */
+
+    /* Custom color for main content background */
+    --main-content-background: 220 14% 96%; /* #F3F4F6 */
+
+    /* Custom colors for Login button */
+    --login-button-bg: 187 35% 48%; /* #5699A1 */
+    --login-button-hover-bg: 187 35% 40%; /* Slightly darker for hover, e.g., #4a858d */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+@layer components {
+  .custom-scrollbar {
+    /* Za Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .custom-scrollbar:hover {
+    scrollbar-color: #5f6368 transparent;
+  }
+
+  /* Za WebKit browsere (Chrome, Safari, Edge) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #5f6368;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  .thin-gray-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #C0C4C8 transparent;
+  }
+  .thin-gray-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .thin-gray-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-gray-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #C0C4C8;
+  }
+  .thin-gray-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  /* Gmail style scrollbar: thin, gray, visible on hover only */
+  .gmail-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .gmail-scrollbar:hover,
+  .gmail-scrollbar:focus,
+  .gmail-scrollbar:focus-within {
+    scrollbar-color: #C0C4C8 transparent;
+  }
+  .gmail-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .gmail-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .gmail-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 4px;
+  }
+  .gmail-scrollbar:hover::-webkit-scrollbar-thumb,
+  .gmail-scrollbar:focus::-webkit-scrollbar-thumb,
+  .gmail-scrollbar:focus-within::-webkit-scrollbar-thumb {
+    background-color: #C0C4C8;
+  }
+  .gmail-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  /* Horizontal Gmail-style scrollbar used for all data grids */
+  .horizontal-scrollbar {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+  }
+  .horizontal-scrollbar:hover {
+    scrollbar-color: #C0C4C8 transparent;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar {
+    height: 6px;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 4px;
+  }
+  .horizontal-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #C0C4C8;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  /* Shadow for sticky section when scrolled */
+  .sidebar-shadow {
+    box-shadow: 0 4px 6px -4px rgba(255, 255, 255, 0.3);
+  }
+}

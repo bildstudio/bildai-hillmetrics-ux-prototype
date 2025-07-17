@@ -1,0 +1,76 @@
+[
+  {
+    "id": "notif_1",
+    "category": "flux_creation",
+    "title": "New flux \"Pricing report\" created",
+    "timestamp": "2025-06-16T20:15:00Z",
+    "isRead": false,
+    "icon": "FileText",
+    "iconColor": "text-green-500"
+  },
+  {
+    "id": "notif_2",
+    "category": "mapping_update",
+    "title": "New flux Mapping \"Mapping CoinGecko report\"",
+    "timestamp": "2025-06-16T18:20:25Z",
+    "isRead": false,
+    "icon": "GitMerge",
+    "iconColor": "text-blue-500"
+  },
+  {
+    "id": "notif_3",
+    "category": "flux_error",
+    "title": "3 Errors occurred while processing \"Flux 1\"",
+    "description": "Error details: Connection timeout, API limit exceeded, Invalid credentials.",
+    "timestamp": "2025-06-15T10:00:00Z",
+    "isRead": false,
+    "icon": "AlertCircle",
+    "iconColor": "text-red-500"
+  },
+  {
+    "id": "notif_4",
+    "category": "flux_processing",
+    "title": "Started processing's for \"Flux1\"",
+    "timestamp": "2025-06-09T14:30:00Z",
+    "isRead": true,
+    "icon": "RefreshCw",
+    "iconColor": "text-sky-500"
+  },
+  {
+    "id": "notif_5",
+    "category": "flux_processing",
+    "title": "Started fetching's for \"Flux1\"",
+    "timestamp": "2025-06-02T09:00:00Z",
+    "isRead": true,
+    "icon": "DownloadCloud",
+    "iconColor": "text-sky-500"
+  },
+  {
+    "id": "notif_6",
+    "category": "system_alert",
+    "title": "System maintenance scheduled for tomorrow",
+    "description": "System will be offline from 2 AM to 4 AM UTC.",
+    "timestamp": "2025-06-16T10:00:00Z",
+    "isRead": false,
+    "icon": "ShieldAlert",
+    "iconColor": "text-yellow-500"
+  },
+  {
+    "id": "notif_7",
+    "category": "flux_creation",
+    "title": "Flux \"Quarterly Earnings\" successfully generated",
+    "timestamp": "2025-06-16T19:50:00Z",
+    "isRead": false,
+    "icon": "FileCheck2",
+    "iconColor": "text-green-500"
+  },
+  {
+    "id": "notif_8",
+    "category": "flux_error",
+    "title": "Failed to update market data for \"NASDAQ\"",
+    "timestamp": "2025-06-14T17:00:00Z",
+    "isRead": true,
+    "icon": "XCircle",
+    "iconColor": "text-red-500"
+  }
+]

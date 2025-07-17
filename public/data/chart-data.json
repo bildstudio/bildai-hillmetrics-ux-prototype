@@ -1,0 +1,45 @@
+{
+  "Last week": [
+    { "date": "Mon", "active": 25, "successful": 30, "failed": 5 },
+    { "date": "Tue", "active": 30, "successful": 25, "failed": 8 },
+    { "date": "Wed", "active": 35, "successful": 40, "failed": 3 },
+    { "date": "Thu", "active": 28, "successful": 35, "failed": 12 },
+    { "date": "Fri", "active": 45, "successful": 30, "failed": 7 },
+    { "date": "Sat", "active": 20, "successful": 15, "failed": 4 },
+    { "date": "Sun", "active": 15, "successful": 20, "failed": 2 }
+  ],
+  "Last month": [
+    { "date": "Mar 31", "active": 10, "successful": 15, "failed": 5 },
+    { "date": "Apr 5", "active": 15, "successful": 25, "failed": 8 },
+    { "date": "Apr 9", "active": 25, "successful": 20, "failed": 12 },
+    { "date": "Apr 11", "active": 20, "successful": 18, "failed": 15 },
+    { "date": "Apr 15", "active": 30, "successful": 28, "failed": 18 },
+    { "date": "Apr 17", "active": 35, "successful": 35, "failed": 10 },
+    { "date": "Apr 19", "active": 28, "successful": 25, "failed": 15 },
+    { "date": "Apr 30", "active": 32, "successful": 30, "failed": 20 }
+  ],
+  "Last three months": [
+    { "date": "Oct", "active": 180, "successful": 220, "failed": 45 },
+    { "date": "Nov", "active": 240, "successful": 190, "failed": 60 },
+    { "date": "Dec", "active": 320, "successful": 280, "failed": 35 }
+  ],
+  "Last year": [
+    { "date": "Jan", "active": 450, "successful": 420, "failed": 85 },
+    { "date": "Feb", "active": 520, "successful": 480, "failed": 92 },
+    { "date": "Mar", "active": 480, "successful": 510, "failed": 78 },
+    { "date": "Apr", "active": 600, "successful": 580, "failed": 65 },
+    { "date": "May", "active": 650, "successful": 620, "failed": 88 },
+    { "date": "Jun", "active": 580, "successful": 640, "failed": 72 },
+    { "date": "Jul", "active": 720, "successful": 690, "failed": 95 },
+    { "date": "Aug", "active": 680, "successful": 710, "failed": 82 },
+    { "date": "Sep", "active": 750, "successful": 720, "failed": 68 },
+    { "date": "Oct", "active": 690, "successful": 750, "failed": 90 },
+    { "date": "Nov", "active": 800, "successful": 780, "failed": 75 },
+    { "date": "Dec", "active": 720, "successful": 800, "failed": 85 }
+  ],
+  "All time": [
+    { "date": "2022", "active": 5200, "successful": 4800, "failed": 650 },
+    { "date": "2023", "active": 7800, "successful": 7200, "failed": 890 },
+    { "date": "2024", "active": 8900, "successful": 8400, "failed": 720 }
+  ]
+}
