@@ -155,7 +155,7 @@ export const WorkflowStagesGrid: React.FC<{
     { key: "stage_started", label: "Stage Started" },
     { key: "stage_end", label: "Stage End" },
     { key: "sub_process_count", label: "Sub process count" },
-    { key: "duration_minutes", label: "Duration" },
+    { key: "duration_seconds", label: "Duration (min)" },
     { key: "progress", label: "Progress" },
     { key: "error_message", label: "Error Message" },
     { key: "view", label: "" },
@@ -204,7 +204,7 @@ export const WorkflowStagesGrid: React.FC<{
   const availableFilterFields: FilterField[] = [
     { key: "stage_type", label: "Stage Type", type: "text" },
     { key: "progress", label: "Progress", type: "progress" },
-    { key: "duration_minutes", label: "Duration", type: "duration" },
+    { key: "duration_seconds", label: "Duration", type: "duration" },
     { key: "stage_started", label: "Stage Started", type: "timerange" },
     { key: "stage_end", label: "Stage End", type: "timerange" },
     { key: "error_message", label: "Error", type: "text" },
@@ -268,9 +268,9 @@ export const WorkflowStagesGrid: React.FC<{
             })
           })
           break
-        case "duration_minutes":
+        case "duration_seconds":
           filtered = filtered.filter((r) => {
-            const val = r.duration_minutes ?? 0
+            const val = (r.duration_seconds ?? 0) / 60  // Convert seconds to minutes
             return (filter.value as string[]).some((label) => {
               const opt = durationOptions.find((o) => o.label === label)
               if (!opt) return false
@@ -844,6 +844,9 @@ export const WorkflowStagesGrid: React.FC<{
             </DropdownMenu>
           </div>
         )
+      case "duration_seconds":
+        if (value === null || value === undefined) return "–"
+        return `${Math.round((value as number) / 60)} min`
       default:
         return String(value ?? "–")
     }
@@ -1093,7 +1096,7 @@ export const WorkflowStagesGrid: React.FC<{
               )}
               onClick={() => setShowSavedFiltersPanel(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[9999]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[9999]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-[#040404]">Saved Filters</h3>
@@ -1174,8 +1177,8 @@ export const WorkflowStagesGrid: React.FC<{
             />
             <div
               className={cn(
-                "fixed top-0 h-full w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[9999]",
-                showSpecificFilterPanel ? "right-[307.2px]" : "right-0",
+                "fixed top-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[9999]",
+                showSpecificFilterPanel ? "md:right-[307.2px] right-0" : "right-0",
               )}
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
@@ -1219,7 +1222,7 @@ export const WorkflowStagesGrid: React.FC<{
             </div>
             {showAddFilterPanel && !editingFilter && showSpecificFilterPanel && (
               <div
-                className="fixed top-0 left-0 right-96 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[9999]"
+                className="fixed top-0 left-0 md:right-96 right-0 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[9999]"
                 onClick={() => {
                   setShowSpecificFilterPanel(false)
                   setSelectedFilterField(null)
@@ -1246,7 +1249,7 @@ export const WorkflowStagesGrid: React.FC<{
                 setEditingFilter(null)
               }}
             />
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[10001]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[10001]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">

@@ -1226,13 +1226,32 @@ export const ProcessingHistoryGrid: React.FC<{
     <div className="relative">
       <div className="space-y-4 transition-all">
 
-        <div className="flex items-center justify-between gap-4">
-          <HorizontalScroller>
-            <div className="flex items-center space-x-2 py-1">
-            <Button variant="outline" onClick={() => setShowSavedFiltersPanel(true)} className="h-9 px-3">
-              <Bookmark className="h-4 w-4 mr-2" />
-              Saved Filters
-            </Button>
+        <div className="flex items-center justify-between gap-4 pt-2">
+          <div className="flex-grow min-w-0">
+            <HorizontalScroller>
+              <div className="flex items-center space-x-2 py-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowSavedFiltersPanel(true)}
+                        className={cn(
+                          "h-9 text-sm px-3 py-2 flex-shrink-0",
+                          showSavedFiltersPanel
+                            ? "bg-blue-100 border-blue-300 text-blue-700"
+                            : "bg-white hover:bg-gray-100",
+                        )}
+                      >
+                        <Bookmark className="h-4 w-4 mr-2" />
+                        Saved Filters
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Manage saved filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
             <div className="h-6 w-px bg-gray-300 mx-1"></div>
             {appliedFilters.map((filter) => (
               <Button
@@ -1255,81 +1274,99 @@ export const ProcessingHistoryGrid: React.FC<{
                 </Button>
               </Button>
             ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowAddFilterPanel(true)
-                setEditingFilter(null)
-              }}
-              className="h-9 px-3 border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add filter
-            </Button>
-            {appliedFilters.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddFilterPanel(true)
+                    setEditingFilter(null)
+                  }}
+                  className="h-9 text-sm px-3 py-2 border border-dashed border-[#D1D5DB] bg-[#F3F4F6] text-[#5A5D5D] hover:bg-[#E5E7EB] flex-shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-2 text-[#5A5D5D]" />
+                  Add filter
+                </Button>
+
+                {appliedFilters.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      // Check if we're clearing a fetching filter
+                      const hasFetchingFilter = appliedFilters.some((f) => f.id === "fetching")
+                      if (hasFetchingFilter) {
+                        onClearFetchingId?.()
+                      }
+                      const hasProcessingFilter = appliedFilters.some((f) => f.id === "processing_single")
+                      if (hasProcessingFilter) {
+                        onClearProcessingId?.()
+                      }
+                      const hasStatusFilter = appliedFilters.some((f) => f.id === "status_summary")
+                      if (hasStatusFilter) {
+                        onClearStatusFilter?.()
+                      }
+                      setAppliedFilters([])
+                    }}
+                    className="h-9 text-sm px-3 py-2 text-[#5499a2] hover:text-[#3d7a82] hover:bg-[#f0f9fa] flex-shrink-0"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </HorizontalScroller>
+          </div>
+          <div className="flex items-center space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-sm text-[#505050]">
+              <span>
+                <span className="hidden sm:inline">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount}
+                </span>
+                <span className="sm:hidden">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount > 999 ? "..." : totalCount}
+                </span>
+              </span>
               <Button
                 variant="ghost"
-                onClick={() => {
-                  // Check if we're clearing a fetching filter
-                  const hasFetchingFilter = appliedFilters.some((f) => f.id === "fetching")
-                  if (hasFetchingFilter) {
-                    onClearFetchingId?.()
-                  }
-                  const hasProcessingFilter = appliedFilters.some((f) => f.id === "processing_single")
-                  if (hasProcessingFilter) {
-                    onClearProcessingId?.()
-                  }
-                  const hasStatusFilter = appliedFilters.some((f) => f.id === "status_summary")
-                  if (hasStatusFilter) {
-                    onClearStatusFilter?.()
-                  }
-                  setAppliedFilters([])
-                }}
-                className="h-9 px-3 text-[#5499a2]"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
               >
-                Clear filters
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={fetchData}
+              aria-label="Refresh data"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={() => setShowColumnsPanel(true)}
+              aria-label="Manage columns"
+            >
+              <Columns3 className="h-4 w-4 text-gray-500" />
+            </Button>
           </div>
-        </HorizontalScroller>
-        <div className="flex items-center space-x-2 text-sm text-[#505050]">
-          <span>
-            {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            disabled={currentPage === totalPages || totalPages === 0}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={fetchData}>
-            <RefreshCw className="h-4 w-4 text-gray-500" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            onClick={() => setShowColumnsPanel(true)}
-            aria-label="Manage columns"
-          >
-            <Columns3 className="h-4 w-4 text-gray-500" />
-          </Button>
         </div>
-      </div>
 
-      <Card>
+        <div className="mt-6">
+          <Card>
         <CardContent className="p-0">
           <div className="overflow-auto">
             <DragDropContext onDragEnd={handleDragEnd}>
@@ -1446,8 +1483,9 @@ export const ProcessingHistoryGrid: React.FC<{
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+          </Card>
+        </div>
 
       {/* Add Filter Panel */}
       {showAddFilterPanel &&
@@ -1468,8 +1506,8 @@ export const ProcessingHistoryGrid: React.FC<{
             />
             <div
               className={cn(
-                "fixed top-0 h-full w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
-                showSpecificFilterPanel ? "right-[307.2px]" : "right-0",
+                "fixed top-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
+                showSpecificFilterPanel ? "md:right-[307.2px] right-0" : "right-0",
               )}
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
@@ -1516,7 +1554,7 @@ export const ProcessingHistoryGrid: React.FC<{
             </div>
             {showAddFilterPanel && !editingFilter && showSpecificFilterPanel && (
               <div
-                className="fixed top-0 left-0 right-96 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
+                className="fixed top-0 left-0 md:right-96 right-0 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
                 onClick={() => {
                   setShowSpecificFilterPanel(false)
                   setSelectedFilterField(null)
@@ -1544,7 +1582,7 @@ export const ProcessingHistoryGrid: React.FC<{
                 setEditingFilter(null)
               }}
             />
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">

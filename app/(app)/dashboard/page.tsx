@@ -79,7 +79,7 @@ export default function DashboardPage() {
           {
             processingId: processingID,
             fluxName: `Flux ${processingID}`,
-            fluxId: "all",
+            fluxId: "",
             onClose: closeTopBlade,
           },
           `Flux ${processingID}`,
@@ -95,11 +95,11 @@ export default function DashboardPage() {
         () => import("@/components/fetching-history/fetching-history-details-blade"),
         {
           fetchingId: fetchingID,
-          fluxName: `Flux ${fetchingID}`,
-          fluxId: "all",
+          fluxName: `Fetching ${fetchingID}`, // Will be auto-corrected by blade
+          fluxId: "", // Will be auto-corrected by blade
           onClose: closeTopBlade,
         },
-        `Flux ${fetchingID}`,
+        `Fetching ${fetchingID}`,
       )
     },
     [openBlade, closeTopBlade],
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         {
           normalizationId: id,
           fluxName: `Flux ${id}`,
-          fluxId: "all",
+          fluxId: "",
           onClose: closeTopBlade,
         },
         `Flux ${id}`,
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         {
           refinementId: id,
           fluxName: `Flux ${id}`,
-          fluxId: "all",
+          fluxId: "",
           onClose: closeTopBlade,
         },
         `Flux ${id}`,
@@ -144,7 +144,7 @@ export default function DashboardPage() {
         {
           calculationId: id,
           fluxName: `Flux ${id}`,
-          fluxId: "all",
+          fluxId: "",
           onClose: closeTopBlade,
         },
         `Flux ${id}`,

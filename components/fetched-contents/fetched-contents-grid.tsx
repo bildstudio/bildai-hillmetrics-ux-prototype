@@ -152,6 +152,8 @@ export const FetchedContentsGrid: React.FC<{
   statusFilter,
   onClearStatusFilter,
 }) => {
+  console.log('🔶 FetchedContentsGrid: Component rendered with onPreviewClick:', !!onPreviewClick)
+  
   const [data, setData] = useState<FetchedContentData[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -173,6 +175,7 @@ export const FetchedContentsGrid: React.FC<{
   const [totalPages, setTotalPages] = useState(1)
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilter[]>([])
   const [showAddFilterPanel, setShowAddFilterPanel] = useState(false)
+  const [showSavedFiltersPanel, setShowSavedFiltersPanel] = useState(false)
   const [selectedFilterField, setSelectedFilterField] = useState<FilterField | null>(null)
   const [showSpecificFilterPanel, setShowSpecificFilterPanel] = useState(false)
   const [editingFilter, setEditingFilter] = useState<AppliedFilter | null>(null)
@@ -769,14 +772,15 @@ export const FetchedContentsGrid: React.FC<{
         return (
           <Badge
             className="bg-black text-white hover:bg-gray-300 cursor-pointer rounded-full px-2"
-            onClick={() =>
+            onClick={() => {
+              console.log('🟢 FetchedContentsGrid: Badge onClick called, onPreviewClick:', !!onPreviewClick)
               onPreviewClick?.({
                 id: item.contentID.toString(),
                 name: item.contentShortName || item.contentName || "Unknown File",
                 fluxId: item.fluxID.toString(),
                 fluxName: fluxNames[item.fluxID] || `Flux ${item.fluxID}`,
               })
-            }
+            }}
           >
             {item.contentID}
           </Badge>
@@ -1275,13 +1279,32 @@ export const FetchedContentsGrid: React.FC<{
         </div>
       )}
       
-      <div className="flex items-center justify-between gap-4">
-        <HorizontalScroller>
-          <div className="flex items-center space-x-2 py-1">
-            <Button variant="outline" className="h-9 px-3 bg-transparent">
-              <Bookmark className="h-4 w-4 mr-2" />
-              Saved Filters
-            </Button>
+      <div className="flex items-center justify-between gap-4 pt-2">
+        <div className="flex-grow min-w-0">
+          <HorizontalScroller>
+            <div className="flex items-center space-x-2 py-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSavedFiltersPanel(true)}
+                      className={cn(
+                        "h-9 text-sm px-3 py-2 flex-shrink-0",
+                        showSavedFiltersPanel
+                          ? "bg-blue-100 border-blue-300 text-blue-700"
+                          : "bg-white hover:bg-gray-100",
+                      )}
+                    >
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Saved Filters
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Manage saved filters</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             <div className="h-6 w-px bg-gray-300 mx-1"></div>
             {appliedFilters.map((filter) => (
               <Button
@@ -1304,67 +1327,76 @@ export const FetchedContentsGrid: React.FC<{
                 </Button>
               </Button>
             ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowAddFilterPanel(true)
-                setEditingFilter(null)
-              }}
-              className="h-9 px-3 border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add filter
-            </Button>
-            {appliedFilters.length > 0 && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  const hasProcessingFilter = appliedFilters.some((f) => f.id === "processing")
-                  if (hasProcessingFilter && !hideProcessingIdBadge) {
-                    onClearProcessingId?.()
-                  }
-                  const hasFetchingFilter = appliedFilters.some((f) => f.id === "fetching")
-                  if (hasFetchingFilter && !hideFetchingIdBadge) {
-                    onClearFetchingId?.()
-                  }
-                  const hasStatusFilter = appliedFilters.some((f) => f.id === "status-prop")
-                  if (hasStatusFilter) {
-                    onClearStatusFilter?.()
-                  }
-                  setAppliedFilters([])
-                }}
-                className="h-9 px-3 text-[#5499a2]"
-              >
-                Clear filters
-              </Button>
-            )}
-          </div>
-        </HorizontalScroller>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setUseSafeMode(!useSafeMode)}
-            className={cn("text-xs", useSafeMode ? "bg-yellow-100" : "")}
-          >
-            {useSafeMode ? "🛡️ Safe" : "🔧 Normal"}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={fetchData}>
-            <RefreshCw className="h-4 w-4 text-gray-500" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            onClick={() => setShowColumnsPanel(true)}
-            aria-label="Manage columns"
-          >
-            <Columns3 className="h-4 w-4 text-gray-500" />
-          </Button>
-        </div>
-      </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddFilterPanel(true)
+                    setEditingFilter(null)
+                  }}
+                  className="h-9 text-sm px-3 py-2 border border-dashed border-[#D1D5DB] bg-[#F3F4F6] text-[#5A5D5D] hover:bg-[#E5E7EB] flex-shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-2 text-[#5A5D5D]" />
+                  Add filter
+                </Button>
 
-      <div className="bg-white rounded-lg shadow-sm">
+                {appliedFilters.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      const hasProcessingFilter = appliedFilters.some((f) => f.id === "processing")
+                      if (hasProcessingFilter && !hideProcessingIdBadge) {
+                        onClearProcessingId?.()
+                      }
+                      const hasFetchingFilter = appliedFilters.some((f) => f.id === "fetching")
+                      if (hasFetchingFilter && !hideFetchingIdBadge) {
+                        onClearFetchingId?.()
+                      }
+                      const hasStatusFilter = appliedFilters.some((f) => f.id === "status-prop")
+                      if (hasStatusFilter) {
+                        onClearStatusFilter?.()
+                      }
+                      setAppliedFilters([])
+                    }}
+                    className="h-9 text-sm px-3 py-2 text-[#5499a2] hover:text-[#3d7a82] hover:bg-[#f0f9fa] flex-shrink-0"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </HorizontalScroller>
+          </div>
+          <div className="flex items-center space-x-4 flex-shrink-0">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setUseSafeMode(!useSafeMode)}
+              className={cn("text-xs", useSafeMode ? "bg-yellow-100" : "")}
+            >
+              {useSafeMode ? "🛡️ Safe" : "🔧 Normal"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={fetchData}
+              aria-label="Refresh data"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={() => setShowColumnsPanel(true)}
+              aria-label="Manage columns"
+            >
+              <Columns3 className="h-4 w-4 text-gray-500" />
+            </Button>
+          </div>
+        </div>
+
+      <div className="mt-6">
+        <div className="bg-white rounded-lg shadow-sm">
         <div className="overflow-auto">
           {useSafeMode ? (
             // SAFE MODE: No drag-drop, simplified table
@@ -1578,6 +1610,7 @@ export const FetchedContentsGrid: React.FC<{
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+          </div>
         </div>
       </div>
 
@@ -1599,8 +1632,8 @@ export const FetchedContentsGrid: React.FC<{
             />
             <div
               className={cn(
-                "fixed top-0 h-full w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
-                showSpecificFilterPanel ? "right-[307.2px]" : "right-0",
+                "fixed top-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
+                showSpecificFilterPanel ? "md:right-[307.2px] right-0" : "right-0",
               )}
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
@@ -1647,7 +1680,7 @@ export const FetchedContentsGrid: React.FC<{
             </div>
             {showAddFilterPanel && !editingFilter && showSpecificFilterPanel && (
               <div
-                className="fixed top-0 left-0 right-96 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
+                className="fixed top-0 left-0 md:right-96 right-0 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
                 onClick={() => {
                   setShowSpecificFilterPanel(false)
                   setSelectedFilterField(null)
@@ -1674,7 +1707,7 @@ export const FetchedContentsGrid: React.FC<{
                 setEditingFilter(null)
               }}
             />
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">

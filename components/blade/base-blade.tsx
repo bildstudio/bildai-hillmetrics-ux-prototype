@@ -27,6 +27,17 @@ export function BaseBlade({
   const { activeBladeZIndex } = useBladeStack()
   const finalZ = zIndex ?? activeBladeZIndex + 5
   const widthClasses = bladeType ? BLADE_TYPE_WIDTHS[bladeType] : ""
+  
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Check if any dropdown menus are open by looking for radix dropdown content
+    const openDropdowns = document.querySelectorAll('[data-radix-popper-content-wrapper]')
+    if (openDropdowns.length > 0) {
+      // Don't close blade if dropdown is open
+      return
+    }
+    onClose?.()
+  }
+  
   return (
     <>
       <motion.div
@@ -36,7 +47,7 @@ export function BaseBlade({
         transition={{ duration: duration / 2 }}
         className="fixed inset-0 bg-black"
         style={{ zIndex: finalZ - 1 }}
-        onClick={onClose}
+        onClick={handleOverlayClick}
       />
       <motion.div
         initial={{ x: "100%" }}

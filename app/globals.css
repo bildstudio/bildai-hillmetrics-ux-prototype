@@ -1,8 +1,8 @@
+@import '../styles/material3-tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import '../styles/material3-tokens.css';
 
 @layer base {
   :root {
@@ -147,6 +147,18 @@
   .gmail-scrollbar:focus-within {
     scrollbar-color: #C0C4C8 transparent;
   }
+
+  /* Hide scrollbar completely for mobile horizontal scroll */
+  .scrollbar-hide {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
   .gmail-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -201,5 +213,45 @@
   /* Shadow for sticky section when scrolled */
   .sidebar-shadow {
     box-shadow: 0 4px 6px -4px rgba(255, 255, 255, 0.3);
+  }
+
+  /* Material 3 Linear Progress Animations */
+  @keyframes linear-progress-primary {
+    0% {
+      left: -35%;
+      right: 100%;
+    }
+    60% {
+      left: 100%;
+      right: -90%;
+    }
+    100% {
+      left: 100%;
+      right: -90%;
+    }
+  }
+
+  @keyframes linear-progress-secondary {
+    0% {
+      left: -200%;
+      right: 100%;
+    }
+    60% {
+      left: 107%;
+      right: -8%;
+    }
+    100% {
+      left: 107%;
+      right: -8%;
+    }
+  }
+
+  .animate-linear-progress-primary {
+    animation: linear-progress-primary 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+  }
+
+  .animate-linear-progress-secondary {
+    animation: linear-progress-secondary 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+    animation-delay: 1.15s;
   }
 }

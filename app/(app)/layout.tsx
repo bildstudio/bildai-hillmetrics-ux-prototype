@@ -17,12 +17,19 @@ import { ViewBladeProvider } from "@/lib/view-blade-context"
 import ViewBladeManager from "@/components/view-flux-blade/view-blade-manager"
 import MinimizedBladesContainer from "@/components/blade/minimized-blades-container"
 import { BladeStackProvider } from "@/lib/blade-stack-context"
+import { SidebarProvider } from "@/lib/sidebar-context"
+import { NavigationProvider } from "@/lib/navigation-context"
+import { AdvancedFilterProvider } from "@/lib/advanced-filter-context"
 
 const roboto = Roboto({
   weight: ["400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
 })
+
+// Create a separate component for the filter
+import dynamic from "next/dynamic"
+const GlobalAdvancedFilter = dynamic(() => import("@/components/layout/global-advanced-filter"), { ssr: false })
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -200,31 +207,34 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={`flex h-screen ${roboto.className}`}>
-      <Sidebar
-        isOpen={isSidebarOpen}
-        setIsOpen={setIsSidebarOpen}
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-      />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <main
-          className={`flex-1 overflow-y-auto bg-main-content-bg relative ${
-            pathname.startsWith("/flux-list/fetching-history") ||
-            pathname.startsWith("/flux-list/processing-history")
-              ? "pt-0 px-0"
-              : "pt-3 px-4 sm:px-6 lg:px-8"
-          }`}
-        >
-          {children}
-        </main>
+    <SidebarProvider isSidebarOpen={isSidebarOpen} isCollapsed={isCollapsed}>
+      <div className={`flex h-screen ${roboto.className}`}>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+        />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <main
+            className={`flex-1 overflow-y-auto bg-main-content-bg relative ${
+              pathname.startsWith("/flux-list/fetching-history") ||
+              pathname.startsWith("/flux-list/processing-history")
+                ? "pt-0 px-0"
+                : "pt-0 px-0 sm:pt-3 sm:px-4 md:px-6 lg:px-8"
+            }`}
+          >
+            {children}
+          </main>
+        </div>
+        <BladePanel isOpen={isBladeOpen} onClose={closeBlade} onSave={handleGlobalBladeSave} initialData={bladeData} />
+        <EditBladeManager />
+        <ViewBladeManager />
+        <MinimizedBladesContainer />
+        <GlobalAdvancedFilter />
       </div>
-      <BladePanel isOpen={isBladeOpen} onClose={closeBlade} onSave={handleGlobalBladeSave} initialData={bladeData} />
-      <EditBladeManager />
-      <ViewBladeManager />
-      <MinimizedBladesContainer />
-    </div>
+    </SidebarProvider>
   )
 }
 
@@ -241,20 +251,24 @@ function AppLayoutLoading() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SearchProvider>
-      <TestNotificationProvider>
-        <Suspense fallback={<AppLayoutLoading />}>
-          <BladeProvider>
-            <ViewBladeProvider>
-              <EditBladeProvider>
-                <BladeStackProvider>
-                  <AppLayoutContent>{children}</AppLayoutContent>
-                </BladeStackProvider>
-              </EditBladeProvider>
-            </ViewBladeProvider>
-          </BladeProvider>
-        </Suspense>
-      </TestNotificationProvider>
-    </SearchProvider>
+    <NavigationProvider>
+      <AdvancedFilterProvider>
+        <SearchProvider>
+          <TestNotificationProvider>
+            <Suspense fallback={<AppLayoutLoading />}>
+              <BladeProvider>
+                <ViewBladeProvider>
+                  <EditBladeProvider>
+                    <BladeStackProvider>
+                      <AppLayoutContent>{children}</AppLayoutContent>
+                    </BladeStackProvider>
+                  </EditBladeProvider>
+                </ViewBladeProvider>
+              </BladeProvider>
+            </Suspense>
+          </TestNotificationProvider>
+        </SearchProvider>
+      </AdvancedFilterProvider>
+    </NavigationProvider>
   )
 }

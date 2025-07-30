@@ -31,12 +31,26 @@ export async function getReports({
       )
     }
 
+    // Log the available fluxState values to debug
+    if (filters.some(f => f.field === 'fluxState' || f.field === 'status')) {
+      console.log('Debug: Getting sample fluxState values...')
+      try {
+        const debugQuery = supabase.from("fluxdata").select("fluxState").limit(10)
+        const { data: debugData } = await debugQuery
+        console.log('Debug: Sample fluxState values:', debugData?.map(d => d.fluxState))
+      } catch (err) {
+        console.log('Debug query failed:', err)
+      }
+    }
+
     filters.forEach((filter) => {
+      console.log('getReports: Applying filter:', filter)
       switch (filter.operator) {
         case "contains":
           query = query.ilike(filter.field, `%${filter.value}%`)
           break
         case "equals":
+          console.log(`Applying equals filter: ${filter.field} = ${filter.value}`)
           query = query.eq(filter.field, filter.value)
           break
         case "startsWith":
@@ -60,6 +74,17 @@ export async function getReports({
         case "after":
           query = query.gt(filter.field, filter.value)
           break
+        case "date_range":
+          // Expecting filter.value to be an object with {from: date, to: date}
+          if (filter.value && typeof filter.value === 'object') {
+            if (filter.value.from) {
+              query = query.gte(filter.field, filter.value.from)
+            }
+            if (filter.value.to) {
+              query = query.lte(filter.field, filter.value.to)
+            }
+          }
+          break
         default:
           break
       }
@@ -78,6 +103,11 @@ export async function getReports({
     if (error) {
       console.error("Supabase fetch error (getReports):", error)
       return { data: [], totalCount: 0, error: error.message }
+    }
+
+    console.log(`getReports: Found ${data?.length || 0} results, total count: ${count}`)
+    if (data && data.length > 0) {
+      console.log('getReports: Sample result:', data[0])
     }
 
     return { data: data as FluxData[], totalCount: count || 0, error: null }

@@ -94,6 +94,15 @@ export async function getProcessingHistory({
       case "after":
         query = query.gt(field, value)
         break
+      case "between":
+        // Expects value in format "from,to" or {from, to}
+        if (typeof value === 'string' && value.includes(',')) {
+          const [from, to] = value.split(',')
+          query = query.gte(field, from).lte(field, to)
+        } else if (value && typeof value === 'object' && value.from && value.to) {
+          query = query.gte(field, value.from).lte(field, value.to)
+        }
+        break
       case "progress_ranges":
         if (Array.isArray(value) && value.length > 0) {
           const firstRange = value[0]

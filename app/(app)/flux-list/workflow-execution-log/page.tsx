@@ -16,6 +16,16 @@ export default function WorkflowExecutionLogPage() {
   const durationBucket = searchParams.get("durationBucket")
   const date = searchParams.get("date")
   const fluxParam = searchParams.get("fluxId")
+  const errorType = searchParams.get("errorType")
+  
+  // Debug log
+  console.log("🔍 WorkflowExecutionLogPage - URL params:", {
+    status,
+    durationBucket,
+    date,
+    fluxParam,
+    errorType
+  })
 
   const handleClear = (param: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -144,6 +154,7 @@ export default function WorkflowExecutionLogPage() {
         statusFilter={status}
         durationBucketFilter={durationBucket}
         dateFilter={date}
+        errorTypeFilter={errorType}
         onContentClick={handleContentClick}
         onViewClick={handleViewFetching}
         onViewProcessingClick={handleViewProcessing}
@@ -154,6 +165,7 @@ export default function WorkflowExecutionLogPage() {
         onClearStatusFilter={() => handleClear("status")}
         onClearDurationBucketFilter={() => handleClear("durationBucket")}
         onClearDateFilter={() => handleClear("date")}
+        onClearErrorTypeFilter={() => handleClear("errorType")}
       />
     </div>
   )

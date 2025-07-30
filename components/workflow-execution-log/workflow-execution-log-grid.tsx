@@ -99,7 +99,7 @@ interface AppliedFilter {
   label: string
 }
 
-const statusOptions = ["Success", "Currently fetching", "Failed"]
+const statusOptions = ["Success", "Currently executing", "Failed"]
 
 const progressOptions = [
   { label: "0% - 25%", min: 0, max: 25 },
@@ -156,9 +156,11 @@ export const WorkflowExecutionLogGrid: React.FC<{
   statusFilter?: string | null
   durationBucketFilter?: string | null
   dateFilter?: string | null
+  errorTypeFilter?: string | null
   onClearStatusFilter?: () => void
   onClearDurationBucketFilter?: () => void
   onClearDateFilter?: () => void
+  onClearErrorTypeFilter?: () => void
   defaultSortColumn?: ColumnKey | null
   defaultSortDirection?: SortDirection | null
   includeQuickFlux?: boolean
@@ -182,9 +184,11 @@ export const WorkflowExecutionLogGrid: React.FC<{
   statusFilter,
   durationBucketFilter,
   dateFilter,
+  errorTypeFilter,
   onClearStatusFilter,
   onClearDurationBucketFilter,
   onClearDateFilter,
+  onClearErrorTypeFilter,
   defaultSortColumn = "started_at",
   defaultSortDirection = "desc",
   includeQuickFlux = true,
@@ -224,6 +228,15 @@ export const WorkflowExecutionLogGrid: React.FC<{
   
   const [textInputValue, setTextInputValue] = useState("")
   const [fluxNames, setFluxNames] = useState<Record<number, string>>({})
+  
+  // Debug props
+  console.log("🔍 WorkflowExecutionLogGrid - Props:", {
+    statusFilter,
+    dateFilter,
+    errorTypeFilter,
+    durationBucketFilter
+  })
+  
   const { openBlade: openViewBladeCtx } = useViewBlade()
   const { openBlade: openStackBlade } = useBladeStack()
   const [hoveredRowId, setHoveredRowId] = useState<number | null>(null)
@@ -387,7 +400,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
     { key: "last_stage", label: "Last Stage", hidden: false },
     { key: "started_at", label: "Started At", hidden: false },
     { key: "completed_at", label: "Completed At", hidden: false },
-    { key: "duration_active", label: "Duration", hidden: false },
+    { key: "duration_seconds", label: "Duration (min)", hidden: false },
     { key: "content_count", label: "Content", hidden: false },
     { key: "view", label: "", hidden: false },
   ])
@@ -456,7 +469,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
     { key: "progress", label: "Progress", type: "progress" },
     { key: "started_at", label: "Started At", type: "timerange" },
     { key: "completed_at", label: "Completed At", type: "timerange" },
-    { key: "duration_active", label: "Duration", type: "duration" },
+    { key: "duration_seconds", label: "Duration (min)", type: "duration" },
     { key: "content_count", label: "Content", type: "text" },
     { key: "steps", label: "Completed stages", type: "text" },
     { key: "last_stage", label: "Last Stage", type: "text" },
@@ -500,14 +513,32 @@ export const WorkflowExecutionLogGrid: React.FC<{
 
   // Handle status filter from Summary tab
   useEffect(() => {
+    console.log("🔍 WorkflowExecutionLogGrid - statusFilter effect:", statusFilter)
+    
     if (statusFilter) {
       const otherFilters = appliedFilters.filter((f) => f.id !== "status_summary")
+      
+      // Map UI status labels to database status values
+      let filterValues: string[] = []
+      if (statusFilter === "Currently executing" || statusFilter === "In Progress") {
+        filterValues = ["InProgress", "In Progress", "Currently Running"]
+      } else if (statusFilter === "Success") {
+        filterValues = ["Success", "Completed"]
+      } else if (statusFilter === "Failed") {
+        filterValues = ["Failed", "Error"]
+      } else {
+        filterValues = [statusFilter]
+      }
+      
+      // Normalize label for display
+      const displayStatus = statusFilter === "In Progress" ? "Currently executing" : statusFilter
+      
       const statusFilterObj: AppliedFilter = {
         id: "status_summary",
         field: "status",
         operator: "in",
-        value: [statusFilter],
-        label: `Status: ${statusFilter}`,
+        value: filterValues,
+        label: `Status: ${displayStatus}`,
       }
       setAppliedFilters([...otherFilters, statusFilterObj])
       setCurrentPage(1)
@@ -522,7 +553,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
       const otherFilters = appliedFilters.filter((f) => f.id !== "duration_summary")
       const durationFilterObj: AppliedFilter = {
         id: "duration_summary",
-        field: "duration_active",
+        field: "duration_seconds",
         operator: "duration_ranges",
         value: [durationBucketFilter],
         label: `Duration: ${durationBucketFilter}`,
@@ -536,17 +567,47 @@ export const WorkflowExecutionLogGrid: React.FC<{
 
   // Handle date filter from summary or trend
   useEffect(() => {
+    console.log("🔍 WorkflowExecutionLogGrid - dateFilter effect:", dateFilter)
+    
     if (dateFilter) {
       const otherFilters = appliedFilters.filter((f) => f.id !== "date_summary")
+      
+      // Parse the date - it might be ISO string or date part
+      let startDate: string
+      let endDate: string
+      let displayDate: string
+      
+      if (dateFilter.includes('T')) {
+        // It's an ISO string from trend click
+        const date = new Date(dateFilter)
+        const dateOnly = date.toISOString().split('T')[0]
+        startDate = `${dateOnly}T00:00:00.000Z`
+        endDate = `${dateOnly}T23:59:59.999Z`
+        displayDate = dateOnly
+      } else {
+        // It's just a date string
+        startDate = `${dateFilter}T00:00:00.000Z`
+        endDate = `${dateFilter}T23:59:59.999Z`
+        displayDate = dateFilter
+      }
+      
+      // Format the date nicely
+      const dateObj = new Date(displayDate + 'T00:00:00')
+      const formattedDate = dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+      
       const dateFilterObj: AppliedFilter = {
         id: "date_summary",
         field: "started_at",
         operator: "date_range",
         value: {
-          start: `${dateFilter}T00:00:00.000Z`,
-          end: `${dateFilter}T23:59:59.999Z`,
+          start: startDate,
+          end: endDate,
         },
-        label: `Date: ${dateFilter}`,
+        label: `Date: ${formattedDate}`,
       }
       setAppliedFilters([...otherFilters, dateFilterObj])
       setCurrentPage(1)
@@ -554,6 +615,65 @@ export const WorkflowExecutionLogGrid: React.FC<{
       setAppliedFilters((prev) => prev.filter((f) => f.id !== "date_summary"))
     }
   }, [dateFilter])
+
+  // Handle error type filter from Summary tab
+  useEffect(() => {
+    console.log("🔍 WorkflowExecutionLogGrid - errorTypeFilter:", errorTypeFilter)
+    
+    if (errorTypeFilter) {
+      const otherFilters = appliedFilters.filter((f) => 
+        f.id !== "error_type_summary" && f.id !== "status_for_error_type"
+      )
+      
+      // Error type filter će biti kao "Failed at Normalization stage"
+      // Treba da ekstraktujemo stage naziv
+      const stageMatch = errorTypeFilter.match(/Failed at (\w+) stage/)
+      
+      if (stageMatch && stageMatch[1]) {
+        const stageName = stageMatch[1] // Npr. "Normalization", "Fetching", itd.
+        
+        // Pošto nema stvarnih podataka za Fetching/Processing greške,
+        // samo dodajemo status filter za Failed workflow-ove
+        const filters: AppliedFilter[] = [...otherFilters]
+        
+        // Dodajemo status filter da prikaže samo Failed workflow-ove
+        filters.push({
+          id: "status_for_error_type",
+          field: "status",
+          operator: "in",
+          value: ["Failed", "Error"],
+          label: "Status: Failed",
+        })
+        
+        // Ako je konkretni stage (ne mock podaci), dodajemo i last_stage filter
+        if (stageName !== "Fetching" && stageName !== "Processing") {
+          filters.push({
+            id: "error_type_summary",
+            field: "last_stage",
+            operator: "equals",
+            value: stageName,
+            label: errorTypeFilter,
+          })
+        } else {
+          // Za mock podatke (Fetching/Processing), samo prikazujemo label
+          filters.push({
+            id: "error_type_summary",
+            field: "flux_name",
+            operator: "contains",
+            value: "MOCK_FILTER", // Neće pronaći ništa, ali prikazaće label
+            label: errorTypeFilter + " (Mock data - no real failures at this stage)",
+          })
+        }
+        
+        setAppliedFilters(filters)
+      }
+      setCurrentPage(1)
+    } else {
+      setAppliedFilters((prev) => prev.filter((f) => 
+        f.id !== "error_type_summary" && f.id !== "status_for_error_type"
+      ))
+    }
+  }, [errorTypeFilter])
 
   useEffect(() => {
     if (fluxIdFilter !== null && fluxIdFilter !== undefined) {
@@ -625,6 +745,19 @@ export const WorkflowExecutionLogGrid: React.FC<{
   useEffect(() => {
     fetchData()
   }, [fetchData])
+  
+  // Debug log to check data structure
+  useEffect(() => {
+    if (data.length > 0) {
+      console.log('🔍 WorkflowExecutionLogGrid - Sample data:', {
+        firstItem: data[0],
+        duration_seconds: data[0]?.duration_seconds,
+        duration_minutes: data[0]?.duration_minutes,
+        duration_active: data[0]?.duration_active,
+        allKeys: Object.keys(data[0])
+      })
+    }
+  }, [data])
 
   useEffect(() => {
     if (showAddFilterPanel || showSpecificFilterPanel) {
@@ -729,9 +862,6 @@ export const WorkflowExecutionLogGrid: React.FC<{
         } catch {
           return "Invalid Date"
         }
-      case "duration_active":
-        if (value === null || value === undefined) return "–"
-        return `${Math.round((value as number) / 60)} min`
       case "progress":
         if (value === null || value === undefined) return "–"
         return (
@@ -776,7 +906,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
           </TooltipProvider>
         )
       }
-      case "content_count":
+      case "content_count": {
         const contentCount = item.content_count ?? 0
         return (
           <Badge
@@ -786,6 +916,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
             {contentCount}
           </Badge>
         )
+      }
       case "steps":
         return (
           <StepsBadge
@@ -883,6 +1014,91 @@ export const WorkflowExecutionLogGrid: React.FC<{
           </div>
         )
       }
+      case "started_at":
+      case "completed_at":
+        if (!value) return "–"
+        try {
+          return format(parseISO(value as string), "dd MMM yyyy HH:mm")
+        } catch {
+          return "Invalid Date"
+        }
+      case "duration_seconds":
+        if (value === null || value === undefined) return "–"
+        return `${Math.round((value as number) / 60)} min`
+      case "progress":
+        if (value === null || value === undefined) return "–"
+        return (
+          <div className="flex items-center gap-2">
+            <Progress
+              value={value as number}
+              className="w-[60%]"
+              indicatorColor="black"
+            />
+            <span className="text-sm text-gray-600">{value}%</span>
+          </div>
+        )
+      case "flux_name":
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="truncate max-w-[150px] inline-block">{fluxName}</span>
+              </TooltipTrigger>
+              <TooltipContent>{fluxName}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      case "flux_id":
+        return (
+          <Badge
+            className="bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer rounded-full px-2"
+            onClick={() => handleQuickView(item.flux_id)}
+          >
+            {item.flux_id}
+          </Badge>
+        )
+      case "run_number":
+        return <span className="text-sm">{item.run_number}</span>
+      case "last_stage":
+        return item.last_stage ? (
+          <span className="text-sm font-medium text-gray-700">{item.last_stage}</span>
+        ) : (
+          "–"
+        )
+      case "content_count": {
+        const contentCount = item.content_count ?? 0
+        return (
+          <Badge
+            className={cn(
+              "rounded-full px-2 cursor-pointer",
+              contentCount > 0
+                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                : "bg-gray-100 text-gray-500 cursor-default",
+            )}
+            onClick={() => contentCount > 0 && onContentClick?.(item.fetching_id!)}
+          >
+            {contentCount}
+          </Badge>
+        )
+      }
+      case "steps":
+        return (
+          <StepsBadge
+            steps={item.steps ?? 0}
+            fetchingId={item.fetching_id}
+            processingId={item.processing_id}
+            normalizationId={item.normalization_id}
+            refinementId={item.refinement_id}
+            calculationId={item.calculation_id}
+            fluxId={item.flux_id}
+            fluxName={fluxName}
+            onViewFetching={onViewClick}
+            onViewProcessing={onViewProcessingClick}
+            onViewNormalization={onViewNormalizationClick}
+            onViewRefinement={onViewRefinementClick}
+            onViewCalculation={onViewCalculationClick}
+          />
+        )
       default:
         return String(value ?? "–")
     }
@@ -898,7 +1114,19 @@ export const WorkflowExecutionLogGrid: React.FC<{
     switch (selectedFilterField.type) {
       case "status":
         if (selectedStatuses.length === 0) return
-        filterValue = selectedStatuses
+        // Map UI status labels to database status values
+        const mappedStatuses = selectedStatuses.flatMap(status => {
+          if (status === "Currently executing") {
+            return ["InProgress", "In Progress"]
+          } else if (status === "Success") {
+            return ["Success", "Completed"]
+          } else if (status === "Failed") {
+            return ["Failed", "Error"]
+          } else {
+            return [status]
+          }
+        })
+        filterValue = mappedStatuses
         operator = "in"
         label = `Status: ${selectedStatuses.join(", ")}`
         break
@@ -1011,7 +1239,22 @@ export const WorkflowExecutionLogGrid: React.FC<{
 
     switch (field.type) {
       case "status":
-        setSelectedStatuses(Array.isArray(filter.value) ? filter.value : [String(filter.value)])
+        // Map database status values back to UI labels when editing
+        const dbStatuses = Array.isArray(filter.value) ? filter.value : [String(filter.value)]
+        const uiStatuses = dbStatuses.map(status => {
+          if (status === "InProgress" || status === "In Progress") {
+            return "Currently executing"
+          } else if (status === "Success" || status === "Completed") {
+            return "Success"
+          } else if (status === "Failed" || status === "Error") {
+            return "Failed"
+          } else {
+            return status
+          }
+        })
+        // Remove duplicates
+        const uniqueStatuses = [...new Set(uiStatuses)]
+        setSelectedStatuses(uniqueStatuses)
         break
       case "progress":
         setSelectedProgressRanges(Array.isArray(filter.value) ? filter.value : [String(filter.value)])
@@ -1214,13 +1457,32 @@ export const WorkflowExecutionLogGrid: React.FC<{
   return (
     <div className="relative">
       <div className="space-y-4 transition-all">
-      <div className="flex items-center justify-between gap-4">
-        <HorizontalScroller>
-          <div className="flex items-center space-x-2 py-1">
-            <Button variant="outline" onClick={() => setShowSavedFiltersPanel(true)} className="h-9 px-3">
-              <Bookmark className="h-4 w-4 mr-2" />
-              Saved Filters
-            </Button>
+      <div className="flex items-center justify-between gap-4 pt-2">
+        <div className="flex-grow min-w-0">
+          <HorizontalScroller>
+            <div className="flex items-center space-x-2 py-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSavedFiltersPanel(true)}
+                      className={cn(
+                        "h-9 text-sm px-3 py-2 flex-shrink-0",
+                        showSavedFiltersPanel
+                          ? "bg-blue-100 border-blue-300 text-blue-700"
+                          : "bg-white hover:bg-gray-100",
+                      )}
+                    >
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Saved Filters
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Manage saved filters</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             <div className="h-6 w-px bg-gray-300 mx-1"></div>
             {appliedFilters.map((filter) => (
               <Button
@@ -1243,71 +1505,89 @@ export const WorkflowExecutionLogGrid: React.FC<{
                 </Button>
               </Button>
             ))}
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowAddFilterPanel(true)
-                setEditingFilter(null)
-              }}
-              className="h-9 px-3 border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add filter
-            </Button>
-            {appliedFilters.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddFilterPanel(true)
+                    setEditingFilter(null)
+                  }}
+                  className="h-9 text-sm px-3 py-2 border border-dashed border-[#D1D5DB] bg-[#F3F4F6] text-[#5A5D5D] hover:bg-[#E5E7EB] flex-shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-2 text-[#5A5D5D]" />
+                  Add filter
+                </Button>
+
+                {appliedFilters.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (appliedFilters.some((f) => f.id === "status_summary")) {
+                        onClearStatusFilter?.()
+                      }
+                      setAppliedFilters([])
+                    }}
+                    className="h-9 text-sm px-3 py-2 text-[#5499a2] hover:text-[#3d7a82] hover:bg-[#f0f9fa] flex-shrink-0"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </HorizontalScroller>
+          </div>
+          <div className="flex items-center space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-sm text-[#505050]">
+              <span>
+                <span className="hidden sm:inline">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount}
+                </span>
+                <span className="sm:hidden">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount > 999 ? "..." : totalCount}
+                </span>
+              </span>
               <Button
                 variant="ghost"
-                onClick={() => {
-                  if (appliedFilters.some((f) => f.id === "status_summary")) {
-                    onClearStatusFilter?.()
-                  }
-                  setAppliedFilters([])
-                }}
-                className="h-9 px-3 text-[#5499a2]"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
               >
-                Clear filters
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={fetchData}
+              aria-label="Refresh data"
+            >
+              <RefreshCw className="h-4 w-4 text-gray-500" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+              onClick={() => setShowColumnsPanel(true)}
+              aria-label="Manage columns"
+            >
+              <Columns3 className="h-4 w-4 text-gray-500" />
+            </Button>
           </div>
-        </HorizontalScroller>
-        <div className="flex items-center space-x-2 text-sm text-[#505050]">
-          <span>
-            {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            disabled={currentPage === totalPages || totalPages === 0}
-            onClick={() => setCurrentPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={fetchData}>
-            <RefreshCw className="h-4 w-4 text-gray-500" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-            onClick={() => setShowColumnsPanel(true)}
-            aria-label="Manage columns"
-          >
-            <Columns3 className="h-4 w-4 text-gray-500" />
-          </Button>
         </div>
-      </div>
 
-      <Card>
+        <div className="mt-6">
+          <Card>
         <CardContent className="p-0">
           <div className="overflow-auto">
             <DragDropContext onDragEnd={handleDragEnd}>
@@ -1441,8 +1721,9 @@ export const WorkflowExecutionLogGrid: React.FC<{
               </Select>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+          </Card>
+        </div>
 
       {showAddFilterPanel &&
         !editingFilter &&
@@ -1462,8 +1743,8 @@ export const WorkflowExecutionLogGrid: React.FC<{
             />
             <div
               className={cn(
-                "fixed top-0 h-full w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
-                showSpecificFilterPanel ? "right-[307.2px]" : "right-0",
+                "fixed top-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[60001]",
+                showSpecificFilterPanel ? "md:right-[307.2px] right-0" : "right-0",
               )}
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
@@ -1510,7 +1791,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
             </div>
             {showAddFilterPanel && !editingFilter && showSpecificFilterPanel && (
               <div
-                className="fixed top-0 left-0 right-96 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
+                className="fixed top-0 left-0 md:right-96 right-0 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[60001]"
                 onClick={() => {
                   setShowSpecificFilterPanel(false)
                   setSelectedFilterField(null)
@@ -1537,7 +1818,7 @@ export const WorkflowExecutionLogGrid: React.FC<{
                 setEditingFilter(null)
               }}
             />
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[60002]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">

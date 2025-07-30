@@ -45,21 +45,23 @@ export default function RecentActivity({
   }, [fluxId])
 
   return (
-    <div className="w-full lg:w-1/2 bg-white rounded-xl p-6 shadow relative lg:ml-4 h-[420px] overflow-hidden">
+    <div className="w-full lg:w-1/2 bg-white rounded-xl p-3 sm:p-4 md:p-6 shadow relative lg:ml-4 h-[420px] overflow-hidden">
       <div className="sticky top-0 bg-white z-10 pb-4">
         <h3 className="text-lg font-semibold">Recent Activity</h3>
         <p className="text-sm text-gray-500">
           Stay up to date with what's happening across the flux.{" "}
-          <a
-            href="#activity-tab"
+          <button
             onClick={(e) => {
               e.preventDefault()
               onNavigate("activity")
             }}
-            className="text-blue-600 underline"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
           >
             View all activity
-          </a>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </p>
       </div>
       <div className="mt-2 max-h-[340px] overflow-y-auto gmail-scrollbar">

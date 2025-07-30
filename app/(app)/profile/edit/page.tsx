@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,13 @@ import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { generateAvatarProps } from "@/lib/avatar-utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   User,
   Mail,
@@ -31,13 +38,163 @@ import {
   Trash2,
   AlertTriangle,
   CheckCircle,
-  ArrowLeft
+  ArrowLeft,
+  ChevronDown,
+  Settings
 } from "lucide-react"
 import { useRouter } from "next/navigation"
+
+const TABS = [
+  { id: "personal", label: "Personal", icon: User },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "privacy", label: "Privacy", icon: Eye },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "preferences", label: "Preferences", icon: Settings },
+]
+
+const ResponsiveTabs = ({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string
+  onTabChange: (tabId: string) => void
+}) => {
+  const [visibleTabs, setVisibleTabs] = useState(TABS)
+  const [hiddenTabs, setHiddenTabs] = useState<typeof TABS>([])
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const measurementRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const calculateTabs = () => {
+      const container = tabsContainerRef.current
+      if (!container) return
+
+      const containerWidth = container.offsetWidth
+      const moreButtonWidth = 120
+      let totalWidth = 0
+      let visibleCount = 0
+
+      for (let i = 0; i < TABS.length; i++) {
+        const measurementEl = measurementRefs.current[i]
+        if (!measurementEl) continue
+
+        const tabWidth = measurementEl.offsetWidth + 8
+
+        if (
+          totalWidth + tabWidth >
+          containerWidth - (hiddenTabs.length > 0 || i < TABS.length - 1 ? moreButtonWidth : 0)
+        ) {
+          break
+        }
+
+        totalWidth += tabWidth
+        visibleCount++
+      }
+
+      if (visibleCount === 0) visibleCount = 1
+
+      const newVisibleTabs = TABS.slice(0, visibleCount)
+      const newHiddenTabs = TABS.slice(visibleCount)
+
+      setVisibleTabs(newVisibleTabs)
+      setHiddenTabs(newHiddenTabs)
+    }
+
+    const timeoutId = setTimeout(calculateTabs, 100)
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateTabs, 100)
+    })
+
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  const handleDropdownSelect = (tabId: string) => {
+    onTabChange(tabId)
+    setIsMoreOpen(false)
+  }
+
+  return (
+    <>
+      <TabsList
+        ref={tabsContainerRef}
+        className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden"
+      >
+        {visibleTabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </TabsTrigger>
+        ))}
+        {hiddenTabs.length > 0 && (
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
+                  <tab.icon className="mr-2 h-4 w-4" />
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+      <div className="absolute top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="flex">
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                measurementRefs.current[index] = el
+              }}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3 font-medium"
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 export default function ProfileEditPage() {
   const router = useRouter()
   const [unsavedChanges, setUnsavedChanges] = useState(false)
+  const [activeTab, setActiveTab] = useState("personal")
   const [isUploading, setIsUploading] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -112,9 +269,13 @@ export default function ProfileEditPage() {
       }, 2000)
     }
   }
+  
+  // Generiši avatar props
+  const fullName = `${formData.firstName} ${formData.lastName}`
+  const avatarProps = generateAvatarProps(fullName, formData.email)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -148,14 +309,10 @@ export default function ProfileEditPage() {
           )}
         </div>
 
-        <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="border-b">
+            <ResponsiveTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
 
           {/* Personal Information */}
           <TabsContent value="personal" className="space-y-6">
@@ -168,9 +325,15 @@ export default function ProfileEditPage() {
                 <div className="flex items-center gap-6">
                   <div className="relative">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src="/placeholder.svg?width=96&height=96" alt="Profile" />
-                      <AvatarFallback className="text-2xl">
-                        {formData.firstName[0]}{formData.lastName[0]}
+                      <AvatarImage src={null} alt={fullName} />
+                      <AvatarFallback 
+                        className="text-2xl"
+                        style={{ 
+                          backgroundColor: avatarProps.backgroundColor,
+                          color: avatarProps.textColor
+                        }}
+                      >
+                        {avatarProps.initials}
                       </AvatarFallback>
                     </Avatar>
                     {isUploading && (

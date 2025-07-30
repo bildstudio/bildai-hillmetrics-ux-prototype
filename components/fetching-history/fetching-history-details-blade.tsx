@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BaseBlade } from "@/components/blade/base-blade"
-import { X, MoreVertical, Info, Globe, Eye, FileText, Minus, Workflow } from "lucide-react"
+import { X, MoreVertical, Info, Globe, Eye, FileText, Minus, Workflow, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -30,6 +30,152 @@ import FetchingRunDetails from "./FetchingRunDetails"
 import FetchingDiagram from "./FetchingDiagram"
 import type { ContentStatusCount } from "@/app/actions/fetching-content-history"
 
+const TABS = [
+  { id: "summary", label: "Summary", icon: Globe },
+  { id: "details", label: "Details", icon: Eye },
+  { id: "diagram", label: "View as diagram", icon: Workflow },
+  { id: "content", label: "Content", icon: FileText },
+]
+
+const ResponsiveTabs = ({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string
+  onTabChange: (tabId: string) => void
+}) => {
+  const [visibleTabs, setVisibleTabs] = useState(TABS)
+  const [hiddenTabs, setHiddenTabs] = useState<typeof TABS>([])
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const measurementRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const calculateTabs = () => {
+      const container = tabsContainerRef.current
+      if (!container) return
+
+      const containerWidth = container.offsetWidth
+      const moreButtonWidth = 120
+      let totalWidth = 0
+      let visibleCount = 0
+
+      for (let i = 0; i < TABS.length; i++) {
+        const measurementEl = measurementRefs.current[i]
+        if (!measurementEl) continue
+
+        const tabWidth = measurementEl.offsetWidth + 8
+
+        if (
+          totalWidth + tabWidth >
+          containerWidth - (hiddenTabs.length > 0 || i < TABS.length - 1 ? moreButtonWidth : 0)
+        ) {
+          break
+        }
+
+        totalWidth += tabWidth
+        visibleCount++
+      }
+
+      if (visibleCount === 0) visibleCount = 1
+
+      const newVisibleTabs = TABS.slice(0, visibleCount)
+      const newHiddenTabs = TABS.slice(visibleCount)
+
+      setVisibleTabs(newVisibleTabs)
+      setHiddenTabs(newHiddenTabs)
+    }
+
+    const timeoutId = setTimeout(calculateTabs, 100)
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateTabs, 100)
+    })
+
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  const handleDropdownSelect = (tabId: string) => {
+    onTabChange(tabId)
+    setIsMoreOpen(false)
+  }
+
+  return (
+    <>
+      <TabsList
+        ref={tabsContainerRef}
+        className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden"
+      >
+        {visibleTabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </TabsTrigger>
+        ))}
+        {hiddenTabs.length > 0 && (
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
+                  <tab.icon className="mr-2 h-4 w-4" />
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+      <div className="absolute top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="flex">
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                measurementRefs.current[index] = el
+              }}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3 font-medium"
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
 interface FetchingHistoryDetailsBladeProps {
   fetchingId: number
   fluxName: string
@@ -47,7 +193,11 @@ export default function FetchingHistoryDetailsBlade({
   onFluxDetails,
   onReady,
 }: FetchingHistoryDetailsBladeProps) {
-  const fullTitle = `ID: ${fetchingId} - Fetching history details - ${fluxName}`
+  // State to hold the actual flux information
+  const [actualFluxId, setActualFluxId] = useState<string>(fluxId)
+  const [actualFluxName, setActualFluxName] = useState<string>(fluxName)
+  
+  const fullTitle = `ID: ${fetchingId} - Fetching history details - ${actualFluxName}`
 
   const truncateTitle = (title: string, maxLength = 30) => {
     return title.length <= maxLength ? title : `${title.substring(0, maxLength - 3)}...`
@@ -64,32 +214,118 @@ export default function FetchingHistoryDetailsBlade({
   const { toast } = useToast()
 
   const openViewBlade = useCallback(
-    (id: string, name?: string) => {
-      openViewBladeCtx(id, name, { stackControlled: true })
+    (id?: string, name?: string) => {
+      const targetId = id || actualFluxId
+      const targetName = name || actualFluxName
+      
+      if (!targetId || targetId === "all" || targetId === "") {
+        toast({
+          title: "Error",
+          description: "Invalid flux ID. Cannot open flux details.",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      openViewBladeCtx(targetId, targetName, { stackControlled: true })
       openStackBlade(
         () => import("@/components/view-flux-blade/ViewFluxBlade"),
         {
-          reportId: id,
+          reportId: targetId,
         },
-        name,
+        targetName,
       )
     },
-    [openViewBladeCtx, openStackBlade],
+    [openViewBladeCtx, openStackBlade, actualFluxId, actualFluxName, toast],
   )
 
   const openEditBlade = useCallback(
-    (id: string, name?: string) => {
-      openEditBladeCtx(id, name, { stackControlled: true })
+    (id?: string, name?: string) => {
+      const targetId = id || actualFluxId
+      const targetName = name || actualFluxName
+      
+      if (!targetId || targetId === "all" || targetId === "") {
+        toast({
+          title: "Error",
+          description: "Invalid flux ID. Cannot open flux editor.",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      openEditBladeCtx(targetId, targetName, { stackControlled: true })
       openStackBlade(
         () => import("@/components/edit-flux-blade/EditFluxBlade"),
         {
-          reportId: id,
+          reportId: targetId,
         },
-        name,
+        targetName,
       )
     },
-    [openEditBladeCtx, openStackBlade],
+    [openEditBladeCtx, openStackBlade, actualFluxId, actualFluxName, toast],
   )
+
+  // Effect to fetch actual flux data if fluxId is invalid or missing
+  useEffect(() => {
+    const fetchFluxData = async () => {
+      // Check if we have an invalid fluxId ("all", empty string, etc.)
+      if (!fluxId || fluxId === "all" || fluxId === "" || fluxName.includes(`Flux ${fetchingId}`)) {
+        try {
+          // Fetch the fetching history data to get the real fluxId and fluxName
+          const response = await fetch('/api/fetching-history/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fluxId: '',
+              page: 1,
+              pageSize: 1,
+              sortColumn: 'fetchingID',
+              sortDirection: 'desc',
+              filters: [{ field: 'fetchingID', operator: 'equals', value: fetchingId }],
+              showFluxId: true
+            })
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            if (data.data && !data.error && data.data.length > 0) {
+              const fetchingData = data.data[0]
+              const realFluxId = String(fetchingData.fluxID || fetchingData.flux_id || "")
+              
+              setActualFluxId(realFluxId)
+              
+              // Check if we have flux names from the response
+              if (data.fluxNames && data.fluxNames[fetchingData.fluxID]) {
+                setActualFluxName(data.fluxNames[fetchingData.fluxID])
+              } else if (realFluxId && realFluxId !== "all" && realFluxId !== "") {
+                // Fallback: try to get the flux name from reports API
+                try {
+                  const fluxResponse = await fetch(`/api/reports/${realFluxId}`)
+                  if (fluxResponse.ok) {
+                    const fluxData = await fluxResponse.json()
+                    if (fluxData.data && !fluxData.error) {
+                      setActualFluxName(fluxData.data.name || `Flux ${realFluxId}`)
+                    } else {
+                      setActualFluxName(`Flux ${realFluxId}`)
+                    }
+                  } else {
+                    setActualFluxName(`Flux ${realFluxId}`)
+                  }
+                } catch (error) {
+                  console.error('Error fetching flux name:', error)
+                  setActualFluxName(`Flux ${realFluxId}`)
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching fetching history data:', error)
+        }
+      }
+    }
+    
+    fetchFluxData()
+  }, [fetchingId, fluxId, fluxName])
 
   useEffect(() => {
     onReady?.()
@@ -115,14 +351,23 @@ export default function FetchingHistoryDetailsBlade({
 
   const handlePreviewFile = useCallback(
     (file: { id: string; name: string; fluxId: string; fluxName?: string }) => {
-      openStackBlade(
-        () => import("../view-flux-blade/FilePreviewBlade"),
-        {
-          file,
-          onClose: closeTopBlade,
-        },
-        file.name,
-      )
+      console.log('🔵 FetchingBlade: handlePreviewFile called with file:', file)
+      console.log('🔵 FetchingBlade: openStackBlade function:', !!openStackBlade)
+      console.log('🔵 FetchingBlade: closeTopBlade function:', !!closeTopBlade)
+      
+      try {
+        openStackBlade(
+          () => import("../view-flux-blade/FilePreviewBlade"),
+          {
+            file,
+            onClose: closeTopBlade,
+          },
+          file.name,
+        )
+        console.log('🔵 FetchingBlade: openStackBlade called successfully')
+      } catch (error) {
+        console.error('🔴 FetchingBlade: Error in openStackBlade:', error)
+      }
     },
     [openStackBlade, closeTopBlade],
   )
@@ -234,13 +479,31 @@ export default function FetchingHistoryDetailsBlade({
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu 
+              modal={false}
+              onOpenChange={(open) => {
+                // Prevent blade from closing when dropdown opens
+                if (open) {
+                  document.body.style.pointerEvents = 'auto'
+                }
+              }}
+            >
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64 z-[10001]" align="end">
+              <DropdownMenuContent 
+                className="w-64 z-[10050]" 
+                align="end"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <FetchingHistoryMenuItems
                   item={{ fetchingID: fetchingId, fluxID: Number(fluxId) } as FetchingHistoryData}
                   onAction={handleMenuAction}
@@ -264,41 +527,23 @@ export default function FetchingHistoryDetailsBlade({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
             <div className="sticky top-0 z-10 bg-[#F1F3F4] border-b border-[#e5e7eb] shrink-0">
               <div className="px-4 md:px-6">
-                <TabsList className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden">
-                  <TabsTrigger
-                    value="summary"
-                    className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                  >
-                    <Globe className="h-4 w-4" />
-                    Summary
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="details"
-                    className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="diagram"
-                    className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                  >
-                    <Workflow className="h-4 w-4" />
-                    View as diagram
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="content"
-                    className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Content
-                  </TabsTrigger>
-                </TabsList>
+                <ResponsiveTabs activeTab={activeTab} onTabChange={setActiveTab} />
               </div>
             </div>
             <TabsContent value="summary" className="flex-grow overflow-auto">
               <div className="p-4 md:p-6 space-y-6">
-                <FetchingDetails fetchingId={fetchingId} />
+                <FetchingDetails 
+                  fetchingId={fetchingId} 
+                  onPreviewFile={(file) => {
+                    console.log('🔴 FetchingDetails: onPreviewFile called with:', file)
+                    handlePreviewFile({
+                      id: file.id,
+                      name: file.name,
+                      fluxId: actualFluxId,
+                      fluxName: actualFluxName
+                    })
+                  }} 
+                />
                 <div className="flex flex-col lg:flex-row gap-6">
                   <FetchedContentInformation
                     fetchingId={fetchingId}
@@ -324,7 +569,10 @@ export default function FetchingHistoryDetailsBlade({
                 <FetchedContentsGrid
                   fluxId="all"
                   fetchingIdFilter={fetchingId}
-                  onPreviewClick={handlePreviewFile}
+                  onPreviewClick={(file) => {
+                    console.log('🟡 FetchingBlade: onPreviewClick received:', file)
+                    handlePreviewFile(file)
+                  }}
                   hideFetchingIdBadge
                   hideFluxIdColumn
                   statusFilter={contentStatusFilter}
@@ -335,7 +583,7 @@ export default function FetchingHistoryDetailsBlade({
           </Tabs>
           </div>
           <FluxDetailsInfoPanel
-            reportId={fluxId}
+            reportId={actualFluxId}
             open={infoOpen}
             onClose={() => setInfoOpen(false)}
             drawer

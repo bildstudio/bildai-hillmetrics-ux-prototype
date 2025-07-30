@@ -35,6 +35,7 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { useBlade } from "@/lib/blade-context"
+import { useNavigation } from "@/lib/navigation-context"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -105,6 +106,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
   const pathname = usePathname()
   const { logout } = useAuth() // logout function is still available from context if needed elsewhere
   const { openBlade } = useBlade()
+  const { setIsNavigating } = useNavigation()
 
   const [fluxOpen, setFluxOpen] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -162,6 +164,13 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
     openBlade(null)
   }
 
+  const handleLinkClick = (href: string) => {
+    if (href !== "#" && href !== pathname) {
+      setIsNavigating(true)
+    }
+    if (window.innerWidth < 1024) setIsOpen(false)
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (window.innerWidth < 768 && isOpen) {
@@ -200,7 +209,11 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
             <MenuIcon className="h-5 w-5" />
           </button>
           {!isCollapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2 ml-2">
+            <Link 
+              href="/dashboard" 
+              className="flex items-center gap-2 ml-2"
+              onClick={() => handleLinkClick("/dashboard")}
+            >
               <Image src="/logo.svg" alt="HillMetrics Logo" width={140} height={25} priority />
             </Link>
           )}
@@ -316,9 +329,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                             : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                           "justify-center",
                         )}
-                        onClick={() => {
-                          if (window.innerWidth < 1024) setIsOpen(false)
-                        }}
+                        onClick={() => handleLinkClick(item.href)}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                       </Link>
@@ -353,9 +364,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                             ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
                             : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                         )}
-                        onClick={() => {
-                          if (window.innerWidth < 1024) setIsOpen(false)
-                        }}
+                        onClick={() => handleLinkClick(item.href)}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         <span>{item.label}</span>
@@ -388,9 +397,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                                 ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
                                 : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                             )}
-                            onClick={() => {
-                              if (window.innerWidth < 1024) setIsOpen(false)
-                            }}
+                            onClick={() => handleLinkClick(item.href)}
                           >
                             <item.icon className="h-5 w-5 flex-shrink-0" />
                             <span>{item.label}</span>
@@ -409,9 +416,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                             ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
                             : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                         )}
-                        onClick={() => {
-                          if (window.innerWidth < 1024) setIsOpen(false)
-                        }}
+                        onClick={() => handleLinkClick(item.href)}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         <span>{item.label}</span>
@@ -445,9 +450,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                             ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
                             : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                         )}
-                        onClick={() => {
-                          if (window.innerWidth < 1024) setIsOpen(false)
-                        }}
+                        onClick={() => handleLinkClick(item.href)}
                       >
                         <item.icon className="h-5 w-5 flex-shrink-0" />
                         <span>{item.label}</span>
@@ -465,9 +468,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
                         ? "bg-sidebar-active text-sidebar-active-foreground font-medium"
                         : "hover:bg-sidebar-hover hover:text-sidebar-hover-foreground",
                     )}
-                    onClick={() => {
-                      if (window.innerWidth < 1024) setIsOpen(false)
-                    }}
+                    onClick={() => handleLinkClick(item.href)}
                   >
                     <item.icon className="h-5 w-5 flex-shrink-0" />
                     <span>{item.label}</span>
@@ -478,7 +479,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
           </div>
         </nav>
 
-        <div className="mt-auto border-t border-sidebar-border px-3 py-4">
+        <div className="mt-auto px-3 py-4">
           {/* System Health Section with StatusBar */}
           <StatusBar isCollapsed={isCollapsed} />
         </div>

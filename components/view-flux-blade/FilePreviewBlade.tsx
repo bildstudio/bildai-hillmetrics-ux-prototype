@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useState } from "react"
 import { BaseBlade } from "@/components/blade/base-blade"
 import { X, Download, MoreVertical, Zap, FileText, Trash2, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,9 +25,18 @@ interface FilePreviewBladeProps {
 }
 
 export default function FilePreviewBlade({ file, onClose, onReady }: FilePreviewBladeProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const { openBlade: openViewBladeCtx } = useViewBlade()
   const { openBlade: openEditBladeCtx } = useEditBlade()
   const { openBlade: openStackBlade, minimizeStack } = useBladeStack()
+  
+  const handleClose = useCallback(() => {
+    if (isDropdownOpen) {
+      return
+    }
+    onClose()
+  }, [isDropdownOpen, onClose])
+  
   const handleMinimize = () => {
     minimizeStack()
   }
@@ -68,12 +77,12 @@ export default function FilePreviewBlade({ file, onClose, onReady }: FilePreview
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose()
+        handleClose()
       }
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [onClose])
+  }, [handleClose])
 
   useEffect(() => {
     onReady?.()
@@ -121,7 +130,7 @@ export default function FilePreviewBlade({ file, onClose, onReady }: FilePreview
   }
 
   return (
-    <BaseBlade onClose={onClose} bladeType="view" className="z-[10003]">
+    <BaseBlade onClose={handleClose} bladeType="view" className="z-[10003]">
         {/* Header */}
         <div className="flex items-center justify-between pl-[25px] md:pl-[25px] md:pr-3 border-b h-16 shrink-0">
           <h1 className="text-xl font-medium text-gray-800">
@@ -133,13 +142,32 @@ export default function FilePreviewBlade({ file, onClose, onReady }: FilePreview
               <Download className="h-4 w-4" />
               Download
             </Button>
-            <DropdownMenu>
+            <DropdownMenu 
+              modal={false}
+              onOpenChange={(open) => {
+                setIsDropdownOpen(open)
+                // Prevent blade from closing when dropdown opens
+                if (open) {
+                  document.body.style.pointerEvents = 'auto'
+                }
+              }}
+            >
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64 z-[10001]" align="end">
+              <DropdownMenuContent 
+                className="w-64 z-[10050]" 
+                align="end"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <FetchedContentMenuItems
                   item={{
                     contentID: Number(file.id),
@@ -172,7 +200,7 @@ export default function FilePreviewBlade({ file, onClose, onReady }: FilePreview
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
+              onClick={handleClose}
               className="hover:bg-gray-100 rounded-full"
               aria-label="Close"
             >

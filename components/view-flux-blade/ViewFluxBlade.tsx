@@ -44,11 +44,7 @@ import { FetchedContentsGrid } from "@/components/fetched-contents/fetched-conte
 import { ActivityFeed } from "@/components/activity/activity-feed"
 import { WorkflowExecutionLogGrid } from "@/components/workflow-execution-log/workflow-execution-log-grid"
 import type { WorkflowExecutionLogData } from "@/app/actions/workflow-execution-log"
-import ProcessingHistoryDetailsBlade from "../processing-history/processing-history-details-blade"
-import FetchingHistoryDetailsBlade from "../fetching-history/fetching-history-details-blade"
-import NormalizationDetailsBlade from "../normalization-history/NormalizationDetailsBlade"
-import RefinementDetailsBlade from "../refinement-history/RefinementDetailsBlade"
-import CalculationDetailsBlade from "../calculation-history/CalculationDetailsBlade"
+// Removed: Details blades now use blade stack dynamic imports
 import SummaryOverview from "./SummaryOverview"
 import FluxDetails from "./FluxDetails"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -183,13 +179,28 @@ const ResponsiveTabs = ({
           </TabsTrigger>
         ))}
         {hiddenTabs.length > 0 && (
-          <DropdownMenu open={isMoreOpen} onOpenChange={setIsMoreOpen}>
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-1 ml-auto px-4 flex-shrink-0">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
                 More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" forceMount className="z-[10001]" style={{ zIndex: 10001 }}>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
               {hiddenTabs.map((tab) => (
                 <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
                   <tab.icon className="mr-2 h-4 w-4" />
@@ -220,6 +231,143 @@ const ResponsiveTabs = ({
   )
 }
 
+const ResponsiveHistoryTabs = ({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string
+  onTabChange: (tabId: string) => void
+}) => {
+  const [visibleTabs, setVisibleTabs] = useState(HISTORY_SUBTAB_LIST)
+  const [hiddenTabs, setHiddenTabs] = useState<typeof HISTORY_SUBTAB_LIST>([])
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const measurementRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const calculateTabs = () => {
+      const container = tabsContainerRef.current
+      if (!container) return
+
+      const containerWidth = container.offsetWidth
+      const moreButtonWidth = 120
+      let totalWidth = 0
+      let visibleCount = 0
+
+      for (let i = 0; i < HISTORY_SUBTAB_LIST.length; i++) {
+        const measurementEl = measurementRefs.current[i]
+        if (!measurementEl) continue
+
+        const tabWidth = measurementEl.offsetWidth + 8
+
+        if (
+          totalWidth + tabWidth >
+          containerWidth - (hiddenTabs.length > 0 || i < HISTORY_SUBTAB_LIST.length - 1 ? moreButtonWidth : 0)
+        ) {
+          break
+        }
+
+        totalWidth += tabWidth
+        visibleCount++
+      }
+
+      if (visibleCount === 0) visibleCount = 1
+
+      const newVisibleTabs = HISTORY_SUBTAB_LIST.slice(0, visibleCount)
+      const newHiddenTabs = HISTORY_SUBTAB_LIST.slice(visibleCount)
+
+      setVisibleTabs(newVisibleTabs)
+      setHiddenTabs(newHiddenTabs)
+    }
+
+    const timeoutId = setTimeout(calculateTabs, 100)
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateTabs, 100)
+    })
+
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  const handleDropdownSelect = (tabId: string) => {
+    onTabChange(tabId)
+    setIsMoreOpen(false)
+  }
+
+  return (
+    <>
+      <TabsList
+        ref={tabsContainerRef}
+        role="tablist"
+        className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden"
+      >
+        {visibleTabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
+          >
+            {tab.label}
+          </TabsTrigger>
+        ))}
+        {hiddenTabs.length > 0 && (
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+      <div className="absolute top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="flex">
+          {HISTORY_SUBTAB_LIST.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                measurementRefs.current[index] = el
+              }}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3 font-medium"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function ViewFluxBlade({ reportId, onReady }: { reportId: string; onReady?: () => void }) {
   const { getBlade, closeBlade, minimizeBlade, updateBladeState } = useViewBlade()
   const { openBlade: openEditBladeCtx, getBlade: getEditBlade } = useEditBlade()
@@ -240,11 +388,7 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
   const [selectedFetchingIdForContent, setSelectedFetchingIdForContent] = useState<number | null>(null)
   const [selectedProcessingIdForHistory, setSelectedProcessingIdForHistory] = useState<number | null>(null)
   const openStackBlade = openBlade
-  const [processingDetail, setProcessingDetail] = useState<{ id: number; name: string; fluxId: string } | null>(null)
-  const [fetchingDetail, setFetchingDetail] = useState<{ id: number; name: string } | null>(null)
-  const [normalizationDetail, setNormalizationDetail] = useState<{ id: number; name: string; fluxId: string } | null>(null)
-  const [refinementDetail, setRefinementDetail] = useState<{ id: number; name: string; fluxId: string } | null>(null)
-  const [calculationDetail, setCalculationDetail] = useState<{ id: number; name: string; fluxId: string } | null>(null)
+  // Removed: blade details now use blade stack instead of local state
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [durationBucketFilter, setDurationBucketFilter] = useState<string | null>(null)
   const [errorTypeFilter, setErrorTypeFilter] = useState<string | null>(null)
@@ -292,70 +436,126 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
         
         if (result.error || !result.data) {
           console.error("Failed to fetch processing data:", result.error)
-          // Fallback to current reportId if API fails
-          setProcessingDetail({ id, name: fluxName, fluxId: reportId })
+          // Use blade stack for opening
+          openBlade(
+            () => import("@/components/processing-history/processing-history-details-blade"),
+            {
+              processingId: id,
+              fluxId: reportId,
+              fluxName,
+              onClose: closeTopBlade,
+              onFluxDetails: () => setActiveTab("flux-details"),
+            },
+            fluxName,
+          )
           return
         }
         
         const actualFluxId = String(result.data.fluxID)
         console.log("🔍 Got actual flux ID for processing", id, ":", actualFluxId)
-        setProcessingDetail({ id, name: fluxName, fluxId: actualFluxId })
+        // Use blade stack for opening
+        openBlade(
+          () => import("@/components/processing-history/processing-history-details-blade"),
+          {
+            processingId: id,
+            fluxId: actualFluxId,
+            fluxName,
+            onClose: closeTopBlade,
+            onFluxDetails: () => setActiveTab("flux-details"),
+          },
+          fluxName,
+        )
       } catch (error) {
         console.error("Error fetching processing details:", error)
-        // Fallback to current reportId if fetch fails
-        setProcessingDetail({ id, name: fluxName, fluxId: reportId })
+        // Use blade stack for opening
+        openBlade(
+          () => import("@/components/processing-history/processing-history-details-blade"),
+          {
+            processingId: id,
+            fluxId: reportId,
+            fluxName,
+            onClose: closeTopBlade,
+            onFluxDetails: () => setActiveTab("flux-details"),
+          },
+          fluxName,
+        )
       }
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
-
-  const handleCloseProcessingDetails = useCallback(() => {
-    setProcessingDetail(null)
-  }, [])
 
   const handleViewFetchingDetails = useCallback(
     (id: number) => {
-      setFetchingDetail({ id, name: fluxName })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/fetching-history/fetching-history-details-blade"),
+        {
+          fetchingId: id,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
-
-  const handleCloseFetchingDetails = useCallback(() => {
-    setFetchingDetail(null)
-  }, [])
 
   const handleViewNormalizationDetails = useCallback(
     (id: number) => {
-      setNormalizationDetail({ id, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/normalization-history/NormalizationDetailsBlade"),
+        {
+          normalizationId: id,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
-
-  const handleCloseNormalizationDetails = useCallback(() => {
-    setNormalizationDetail(null)
-  }, [])
 
   const handleViewRefinementDetails = useCallback(
     (id: number) => {
-      setRefinementDetail({ id, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/refinement-history/RefinementDetailsBlade"),
+        {
+          refinementId: id,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
-
-  const handleCloseRefinementDetails = useCallback(() => {
-    setRefinementDetail(null)
-  }, [])
 
   const handleViewCalculationDetails = useCallback(
     (id: number) => {
-      setCalculationDetail({ id, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/calculation-history/CalculationDetailsBlade"),
+        {
+          calculationId: id,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
-  const handleCloseCalculationDetails = useCallback(() => {
-    setCalculationDetail(null)
-  }, [])
 
   const openFetchingDetailsBlade = useCallback(
     (
@@ -562,6 +762,13 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
     tab: string,
     opts?: { status?: string; durationBucket?: string; errorType?: string; date?: string },
   ) => {
+    console.log('🔍 ViewFluxBlade - handleSummaryNavigate:', {
+      tab,
+      opts,
+      currentActiveTab: activeTab,
+      currentActiveHistoryTab: activeHistoryTab
+    })
+    
     // Clear all existing filters when navigating from summary
     setSelectedFetchingId(null)
     setSelectedProcessingId(null)
@@ -573,9 +780,19 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
     setDurationBucketFilter(opts?.durationBucket || null)
     setErrorTypeFilter(opts?.errorType || null)
     setDateFilter(opts?.date || null)
-    if (tab === "fetching-history" || tab === "processing-history") {
+    
+    console.log('🔍 ViewFluxBlade - filters set:', {
+      statusFilter: opts?.status || null,
+      dateFilter: opts?.date || null
+    })
+    
+    if (tab === "fetching-history" || tab === "processing-history" || tab === "workflow-execution-log") {
       setActiveTab("history")
-      setActiveHistoryTab(tab)
+      if (tab === "workflow-execution-log") {
+        setActiveHistoryTab("workflow-execution-history")
+      } else {
+        setActiveHistoryTab(tab)
+      }
     } else {
       setActiveTab(tab)
     }
@@ -621,56 +838,92 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
 
   const handleViewProcessingDetailsFromActivity = useCallback(
     async (processingId: number) => {
-      try {
-        // Fetch the processing data to get the actual flux ID
-        const response = await fetch(`/api/processing-history/by-id?processingId=${processingId}`)
-        const result = await response.json()
-        
-        if (result.error || !result.data) {
-          console.error("Failed to fetch processing data:", result.error)
-          // Fallback to current reportId if API fails
-          setProcessingDetail({ id: processingId, name: fluxName, fluxId: reportId })
-          return
-        }
-        
-        const actualFluxId = String(result.data.fluxID)
-        console.log("🔍 Got actual flux ID for processing", processingId, ":", actualFluxId)
-        setProcessingDetail({ id: processingId, name: fluxName, fluxId: actualFluxId })
-      } catch (error) {
-        console.error("Error fetching processing details:", error)
-        // Fallback to current reportId if fetch fails
-        setProcessingDetail({ id: processingId, name: fluxName, fluxId: reportId })
-      }
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/processing-history/processing-history-details-blade"),
+        {
+          processingId,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
   const handleViewFetchingDetailsFromActivity = useCallback(
     (fetchingId: number) => {
-      setFetchingDetail({ id: fetchingId, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/fetching-history/fetching-history-details-blade"),
+        {
+          fetchingId,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
   const handleViewNormalizationDetailsFromActivity = useCallback(
     (normalizationId: number) => {
-      setNormalizationDetail({ id: normalizationId, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/normalization-history/NormalizationDetailsBlade"),
+        {
+          normalizationId,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
   const handleViewRefinementDetailsFromActivity = useCallback(
     (refinementId: number) => {
-      setRefinementDetail({ id: refinementId, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/refinement-history/RefinementDetailsBlade"),
+        {
+          refinementId,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
   const handleViewCalculationDetailsFromActivity = useCallback(
     (calculationId: number) => {
-      setCalculationDetail({ id: calculationId, name: fluxName, fluxId: reportId })
+      // Use blade stack for opening
+      openBlade(
+        () => import("@/components/calculation-history/CalculationDetailsBlade"),
+        {
+          calculationId,
+          fluxId: reportId,
+          fluxName,
+          onClose: closeTopBlade,
+          onFluxDetails: () => setActiveTab("flux-details"),
+        },
+        fluxName,
+      )
     },
-    [fluxName, reportId],
+    [fluxName, reportId, openBlade, closeTopBlade],
   )
 
   useEffect(() => {
@@ -707,36 +960,12 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (processingDetail) {
-          handleCloseProcessingDetails()
-        } else if (fetchingDetail) {
-          handleCloseFetchingDetails()
-        } else if (normalizationDetail) {
-          handleCloseNormalizationDetails()
-        } else if (refinementDetail) {
-          handleCloseRefinementDetails()
-        } else if (calculationDetail) {
-          handleCloseCalculationDetails()
-        } else {
-          forceClose()
-        }
+        forceClose()
       }
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [
-    forceClose,
-    processingDetail,
-    fetchingDetail,
-    normalizationDetail,
-    refinementDetail,
-    calculationDetail,
-    handleCloseProcessingDetails,
-    handleCloseFetchingDetails,
-    handleCloseNormalizationDetails,
-    handleCloseRefinementDetails,
-    handleCloseCalculationDetails,
-  ])
+  }, [forceClose])
 
   if (!bladeState) return null
 
@@ -773,34 +1002,17 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
       <BaseBlade onClose={forceClose} bladeType="view" zIndex={bladeCssZIndex}>
         <motion.div
           animate={{
-            x: 0,
-            transform:
-              processingDetail ||
-              fetchingDetail ||
-              normalizationDetail ||
-              refinementDetail ||
-              calculationDetail ||
-              editBladeState
-                ? `translateX(-${isNestedPreviewOpen ? 300 : 150}px)`
-                : isNestedPreviewOpen
-                  ? "translateX(-150px)"
-                  : "translateX(0%)",
+            transform: editBladeState
+              ? `translateX(-${isNestedPreviewOpen ? 300 : 150}px)`
+              : isNestedPreviewOpen
+                ? "translateX(-150px)"
+                : "translateX(0%)",
           }}
           transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
           className="h-full flex flex-col"
           aria-labelledby="blade-title"
         >
         {showProgress && <IndeterminateProgress />}
-        <AnimatePresence>
-          {(processingDetail || fetchingDetail || normalizationDetail || refinementDetail || calculationDetail) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/20 z-20"
-            />
-          )}
-        </AnimatePresence>
         {/* Header */}
         <div
           className={cn(
@@ -836,13 +1048,31 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu 
+              modal={false}
+              onOpenChange={(open) => {
+                // Prevent blade from closing when dropdown opens
+                if (open) {
+                  document.body.style.pointerEvents = 'auto'
+                }
+              }}
+            >
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64 z-[10000]" align="end">
+              <DropdownMenuContent 
+                className="w-64 z-[10050]" 
+                align="end"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <FluxMenuItems
                   item={{ id: reportId, name: fluxName } as FluxData}
                   onAction={(action) => handleMenuAction(action)}
@@ -907,17 +1137,10 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
                       className="flex flex-col h-full"
                     >
                       <div className="sticky top-0 z-10 bg-[#F1F3F4] shrink-0">
-                        <TabsList role="tablist" className="bg-transparent">
-                          {HISTORY_SUBTAB_LIST.map((ht) => (
-                            <TabsTrigger
-                              key={ht.id}
-                              value={ht.id}
-                              className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                            >
-                              {ht.label}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
+                        <ResponsiveHistoryTabs 
+                          activeTab={activeHistoryTab}
+                          onTabChange={setActiveHistoryTab}
+                        />
                       </div>
                       <div className="flex-grow overflow-y-auto">
                         <TabsContent value="workflow-execution-history" className="h-full">
@@ -928,6 +1151,14 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
                               defaultSortDirection="desc"
                               includeQuickFlux={false}
                               includeFluxManagement={false}
+                              statusFilter={statusFilter}
+                              dateFilter={dateFilter}
+                              durationBucketFilter={durationBucketFilter}
+                              errorTypeFilter={errorTypeFilter}
+                              onClearStatusFilter={handleClearStatusFilter}
+                              onClearDateFilter={handleClearDateFilter}
+                              onClearDurationBucketFilter={handleClearDurationBucketFilter}
+                              onClearErrorTypeFilter={handleClearErrorTypeFilter}
                               onWorkflowDetailsClick={handleViewWorkflowDetails}
                               onViewClick={handleViewFetchingDetails}
                               onViewProcessingClick={handleViewProcessingDetails}
@@ -1016,7 +1247,7 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
                       />
                     </div>
                   ) : tab.id === "summary" ? (
-                    <div className="p-4 md:p-6">
+                    <div className="p-0 md:p-6">
                       <SummaryOverview
                         fluxId={reportId}
                         onNavigate={handleSummaryNavigate}
@@ -1053,54 +1284,6 @@ export default function ViewFluxBlade({ reportId, onReady }: { reportId: string;
           </div>
         </Tabs>
         </motion.div>
-      <AnimatePresence>
-        {processingDetail && (
-          <ProcessingHistoryDetailsBlade
-            processingId={processingDetail.id}
-            fluxName={processingDetail.name}
-            fluxId={processingDetail.fluxId}
-            onClose={handleCloseProcessingDetails}
-            onFluxDetails={() => setActiveTab("flux-details")}
-            onPreviewOpenChange={setIsNestedPreviewOpen}
-          />
-        )}
-        {fetchingDetail && (
-          <FetchingHistoryDetailsBlade
-            fetchingId={fetchingDetail.id}
-            fluxName={fetchingDetail.name}
-            fluxId={reportId}
-            onClose={handleCloseFetchingDetails}
-            onFluxDetails={() => setActiveTab("flux-details")}
-          />
-        )}
-        {normalizationDetail && (
-          <NormalizationDetailsBlade
-            normalizationId={normalizationDetail.id}
-            fluxName={normalizationDetail.name}
-            fluxId={reportId}
-            onClose={handleCloseNormalizationDetails}
-            onFluxDetails={() => setActiveTab("flux-details")}
-          />
-        )}
-        {refinementDetail && (
-          <RefinementDetailsBlade
-            refinementId={refinementDetail.id}
-            fluxName={refinementDetail.name}
-            fluxId={reportId}
-            onClose={handleCloseRefinementDetails}
-            onFluxDetails={() => setActiveTab("flux-details")}
-          />
-        )}
-        {calculationDetail && (
-          <CalculationDetailsBlade
-            calculationId={calculationDetail.id}
-            fluxName={calculationDetail.name}
-            fluxId={reportId}
-            onClose={handleCloseCalculationDetails}
-            onFluxDetails={() => setActiveTab("flux-details")}
-          />
-        )}
-      </AnimatePresence>
     </BaseBlade>
     </>
   )

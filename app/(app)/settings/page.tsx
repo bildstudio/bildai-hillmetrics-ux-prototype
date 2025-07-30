@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,12 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Settings,
   User,
@@ -30,15 +36,167 @@ import {
   AlertTriangle,
   CheckCircle,
   Save,
-  RotateCcw
+  RotateCcw,
+  ChevronDown
 } from "lucide-react"
+
+const TABS = [
+  { id: "general", label: "General", icon: User },
+  { id: "workflow", label: "Workflow", icon: Workflow },
+  { id: "interface", label: "Interface", icon: Monitor },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "data", label: "Data", icon: Database },
+  { id: "performance", label: "Performance", icon: RefreshCw },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "advanced", label: "Advanced", icon: Settings },
+]
+
+const ResponsiveTabs = ({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string
+  onTabChange: (tabId: string) => void
+}) => {
+  const [visibleTabs, setVisibleTabs] = useState(TABS)
+  const [hiddenTabs, setHiddenTabs] = useState<typeof TABS>([])
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const measurementRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const calculateTabs = () => {
+      const container = tabsContainerRef.current
+      if (!container) return
+
+      const containerWidth = container.offsetWidth
+      const moreButtonWidth = 120
+      let totalWidth = 0
+      let visibleCount = 0
+
+      for (let i = 0; i < TABS.length; i++) {
+        const measurementEl = measurementRefs.current[i]
+        if (!measurementEl) continue
+
+        const tabWidth = measurementEl.offsetWidth + 8
+
+        if (
+          totalWidth + tabWidth >
+          containerWidth - (hiddenTabs.length > 0 || i < TABS.length - 1 ? moreButtonWidth : 0)
+        ) {
+          break
+        }
+
+        totalWidth += tabWidth
+        visibleCount++
+      }
+
+      if (visibleCount === 0) visibleCount = 1
+
+      const newVisibleTabs = TABS.slice(0, visibleCount)
+      const newHiddenTabs = TABS.slice(visibleCount)
+
+      setVisibleTabs(newVisibleTabs)
+      setHiddenTabs(newHiddenTabs)
+    }
+
+    const timeoutId = setTimeout(calculateTabs, 100)
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateTabs, 100)
+    })
+
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  const handleDropdownSelect = (tabId: string) => {
+    onTabChange(tabId)
+    setIsMoreOpen(false)
+  }
+
+  return (
+    <>
+      <TabsList
+        ref={tabsContainerRef}
+        className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden"
+      >
+        {visibleTabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </TabsTrigger>
+        ))}
+        {hiddenTabs.length > 0 && (
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
+                  <tab.icon className="mr-2 h-4 w-4" />
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+      <div className="absolute top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="flex">
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                measurementRefs.current[index] = el
+              }}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3 font-medium"
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 export default function SettingsPage() {
   const [unsavedChanges, setUnsavedChanges] = useState(false)
+  const [activeTab, setActiveTab] = useState("general")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen">
+      <div className="max-w-6xl mx-auto p-3 sm:p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -47,15 +205,17 @@ export default function SettingsPage() {
           </div>
           <p className="text-gray-600">Configure your workflow execution and data processing preferences</p>
           {unsavedChanges && (
-            <div className="mt-3 flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm">You have unsaved changes</span>
-              <div className="ml-auto flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setUnsavedChanges(false)}>
+            <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">You have unsaved changes</span>
+              </div>
+              <div className="w-full sm:w-auto sm:ml-auto flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setUnsavedChanges(false)} className="flex-1 sm:flex-initial">
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Discard
                 </Button>
-                <Button size="sm" onClick={() => setUnsavedChanges(false)}>
+                <Button size="sm" onClick={() => setUnsavedChanges(false)} className="flex-1 sm:flex-initial">
                   <Save className="h-3 w-3 mr-1" />
                   Save Changes
                 </Button>
@@ -64,41 +224,10 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="workflow" className="flex items-center gap-2">
-              <Workflow className="h-4 w-4" />
-              Workflow
-            </TabsTrigger>
-            <TabsTrigger value="interface" className="flex items-center gap-2">
-              <Monitor className="h-4 w-4" />
-              Interface
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="data" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              Data
-            </TabsTrigger>
-            <TabsTrigger value="performance" className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Performance
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="advanced" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Advanced
-            </TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="border-b">
+            <ResponsiveTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
 
           {/* General Settings */}
           <TabsContent value="general" className="space-y-6">
@@ -108,7 +237,7 @@ export default function SettingsPage() {
                 <CardDescription>Configure your personal settings and preferences</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Display Name</Label>
                     <Input id="displayName" placeholder="Enter your display name" />
@@ -158,7 +287,7 @@ export default function SettingsPage() {
                 <CardDescription>Configure default settings for workflow processing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="defaultTimeout">Default Timeout (minutes)</Label>
                     <Input id="defaultTimeout" type="number" placeholder="30" />
@@ -203,9 +332,9 @@ export default function SettingsPage() {
                         <Badge variant="outline">{stage}</Badge>
                         <span className="text-sm">{stage} Stage</span>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 sm:gap-4">
                         <Select defaultValue="medium">
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-24 sm:w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -317,7 +446,7 @@ export default function SettingsPage() {
                 <CardDescription>Default settings for data grids and filters</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Default Page Size</Label>
                     <Select defaultValue="50">
@@ -387,9 +516,9 @@ export default function SettingsPage() {
                         <div className="font-medium">{item.event}</div>
                         <div className="text-sm text-gray-500">{item.desc}</div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2 sm:gap-4">
                         <Select defaultValue="email">
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-24 sm:w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -415,7 +544,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Quiet Hours</Label>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm text-gray-500">Start Time</Label>
                       <Input type="time" defaultValue="22:00" />
@@ -466,7 +595,7 @@ export default function SettingsPage() {
                         <div className="text-sm text-gray-500">Currently: {item.current}</div>
                       </div>
                       <Select defaultValue={item.current.split(' ')[0]}>
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-24 sm:w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -511,7 +640,7 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button variant="outline" className="flex items-center gap-2">
                     <Download className="h-4 w-4" />
                     Export All Data
@@ -533,7 +662,7 @@ export default function SettingsPage() {
                 <CardDescription>Monitor and configure system performance settings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="text-center p-4 border rounded-lg">
                     <div className="text-2xl font-bold text-green-600">94%</div>
                     <div className="text-sm text-gray-500">CPU Usage</div>

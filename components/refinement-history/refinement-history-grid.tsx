@@ -544,13 +544,32 @@ export function RefinementHistoryGrid({
   return (
     <div className="relative">
       <div className="space-y-4 transition-all">
-        <div className="flex items-center justify-between gap-4">
-          <HorizontalScroller>
-            <div className="flex items-center space-x-2 py-1">
-              <Button variant="outline" onClick={() => setShowSavedFiltersPanel(true)} className="h-9 px-3">
-                <Bookmark className="h-4 w-4 mr-2" />
-                Saved Filters
-              </Button>
+        <div className="flex items-center justify-between gap-4 pt-2">
+          <div className="flex-grow min-w-0">
+            <HorizontalScroller>
+              <div className="flex items-center space-x-2 py-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowSavedFiltersPanel(true)}
+                        className={cn(
+                          "h-9 text-sm px-3 py-2 flex-shrink-0",
+                          showSavedFiltersPanel
+                            ? "bg-blue-100 border-blue-300 text-blue-700"
+                            : "bg-white hover:bg-gray-100",
+                        )}
+                      >
+                        <Bookmark className="h-4 w-4 mr-2" />
+                        Saved Filters
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Manage saved filters</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               <div className="h-6 w-px bg-gray-300 mx-1"></div>
               {appliedFilters.map((filter) => (
                 <Button
@@ -573,51 +592,67 @@ export function RefinementHistoryGrid({
                   </Button>
                 </Button>
               ))}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAddFilterPanel(true)
-                  setEditingFilter(null)
-                }}
-                className="h-9 px-3 border-dashed"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add filter
-              </Button>
-              {appliedFilters.length > 0 && (
                 <Button
-                  variant="ghost"
-                  onClick={() => setAppliedFilters([])}
-                  className="h-9 px-3 text-[#5499a2]"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddFilterPanel(true)
+                    setEditingFilter(null)
+                  }}
+                  className="h-9 text-sm px-3 py-2 border border-dashed border-[#D1D5DB] bg-[#F3F4F6] text-[#5A5D5D] hover:bg-[#E5E7EB] flex-shrink-0"
                 >
-                  Clear filters
+                  <Plus className="h-4 w-4 mr-2 text-[#5A5D5D]" />
+                  Add filter
                 </Button>
-              )}
+
+                {appliedFilters.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setAppliedFilters([])}
+                    className="h-9 text-sm px-3 py-2 text-[#5499a2] hover:text-[#3d7a82] hover:bg-[#f0f9fa] flex-shrink-0"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </HorizontalScroller>
+          </div>
+          <div className="flex items-center space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-2 text-sm text-[#505050]">
+              <span>
+                <span className="hidden sm:inline">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount}
+                </span>
+                <span className="sm:hidden">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount > 999 ? "..." : totalCount}
+                </span>
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </HorizontalScroller>
-          <div className="flex items-center space-x-2 text-sm text-[#505050]">
-            <span>
-              {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
-            </span>
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
+              aria-label="Refresh data"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-[#f0f9fa] hover:text-[#3d7a82] transition-all duration-200"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
               <RefreshCw className="h-4 w-4 text-gray-500" />
             </Button>
             <Button
@@ -632,7 +667,8 @@ export function RefinementHistoryGrid({
           </div>
         </div>
 
-        <Card>
+        <div className="mt-6">
+          <Card>
           <CardContent className="p-0">
             <div className="overflow-auto">
               <DragDropContext onDragEnd={handleDragEnd}>
@@ -744,8 +780,9 @@ export function RefinementHistoryGrid({
                 </Table>
               </DragDropContext>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Columns Panel */}

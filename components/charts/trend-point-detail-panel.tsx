@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, CheckCircle, Loader2, XCircle, ArrowRight } from "lucide-react"
+import { X, CheckCircle, Loader2, XCircle, ArrowRight, Calendar, TrendingUp, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface TrendPoint {
   date: Date
@@ -17,7 +18,7 @@ interface TrendPointDetailPanelProps {
   isOpen: boolean
   onClose: () => void
   point: TrendPoint | null
-  trendType: 'fetching' | 'processing'
+  trendType: 'fetching' | 'processing' | 'workflow'
   onNavigate: (tab: string, opts?: { date?: string; status?: string }) => void
 }
 
@@ -35,7 +36,8 @@ export default function TrendPointDetailPanel({
       // Prefetch metadata on panel open
       const fetchMetadata = async () => {
         try {
-          const response = await fetch(`/api/${trendType}-history/meta?date=${point.date.toISOString()}`)
+          const apiPath = trendType === 'workflow' ? 'workflow-execution-log' : `${trendType}-history`
+          const response = await fetch(`/api/${apiPath}/meta?date=${point.date.toISOString()}`)
           const data = await response.json()
           if (!data.error) {
             setMetadata({ totalItems: data.totalItems || 0 })
@@ -48,161 +50,202 @@ export default function TrendPointDetailPanel({
     }
   }, [point, isOpen, trendType])
 
-  if (!isOpen || !point) return null
+  if (!point) return null
 
   const total = point.success + point.active + point.failed
-  const historyTab = trendType === 'fetching' ? 'fetching-history' : 'processing-history'
+  const historyTab = trendType === 'fetching' ? 'fetching-history' : trendType === 'processing' ? 'processing-history' : 'workflow-execution-log'
   const dateString = point.date.toISOString()
+  
+  console.log('🔍 TrendPointDetailPanel - date info:', {
+    pointDate: point.date,
+    dateString,
+    dateOnly: dateString.split('T')[0]
+  })
 
   const handleStatusClick = (status: string) => {
+    let statusFilter = ''
+    if (status === 'active') {
+      statusFilter = trendType === 'fetching' ? 'Currently fetching' : trendType === 'processing' ? 'Currently processing' : 'In Progress'
+    } else if (status === 'success') {
+      statusFilter = 'Success'
+    } else if (status === 'failed') {
+      statusFilter = 'Failed'
+    }
+    
+    const dateOnly = point.date.toISOString().split('T')[0]
+    
+    console.log('🔍 TrendPointDetailPanel - handleStatusClick:', {
+      status,
+      statusFilter,
+      historyTab,
+      dateOnly,
+      trendType
+    })
+    
     onNavigate(historyTab, { 
-      date: dateString, 
-      status: status === 'active' ? 'Currently processing' : status === 'success' ? 'Success' : 'Failed'
+      date: dateOnly, 
+      status: statusFilter
     })
     onClose()
   }
 
+  const handleViewAll = () => {
+    const dateOnly = point.date.toISOString().split('T')[0]
+    onNavigate(historyTab, { date: dateOnly })
+    onClose()
+  }
+
   return (
-    <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/20 z-40"
-        onClick={onClose}
-      />
-      
-      {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10">
-              {trendType === 'fetching' ? (
-                <XCircle className="h-5 w-5 text-primary" />
-              ) : (
-                <Loader2 className="h-5 w-5 text-primary" />
-              )}
-            </div>
-            <div>
-              <h2 className="text-lg font-medium text-gray-900">
-                {trendType === 'fetching' ? 'Fetching' : 'Processing'} Details
-              </h2>
-              <p className="text-sm text-gray-600">
-                {format(point.date, 'EEE, MMM d, yyyy')}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Overlay */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.6 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black z-[10040]"
             onClick={onClose}
-            className="h-8 w-8"
+          />
+          
+          {/* Panel */}
+          <motion.div 
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed right-0 top-0 h-full w-full md:w-[300px] lg:w-[350px] xl:w-[400px] bg-white shadow-2xl z-[10045] flex flex-col"
           >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-6 space-y-6">
-          {/* Summary */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-900">Summary</h3>
-            <p className="text-xs text-gray-600">
-              You selected {total} {total === 1 ? 'item' : 'items'} from {format(point.date, 'PPP')}.
-              {metadata && ` Total items in period: ${metadata.totalItems}`}
-            </p>
-          </div>
-
-          {/* Status Breakdown */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium text-gray-900">Status Breakdown</h3>
-            
-            {/* Success */}
-            <div 
-              className="flex items-center justify-between p-4 rounded-xl border border-green-200 bg-green-50/50 cursor-pointer hover:bg-green-50 transition-colors"
-              onClick={() => handleStatusClick('success')}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-green-100">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-green-900">Success</p>
-                  <p className="text-xs text-green-700">
-                    {point.success} items ({total > 0 ? Math.round((point.success / total) * 100) : 0}%)
-                  </p>
-                </div>
+            {/* Header - Material 3 Surface */}
+            <div className="flex items-center justify-between px-6 lg:px-8 py-5 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-medium text-gray-900">
+                  {trendType === 'fetching' ? 'Fetching' : trendType === 'processing' ? 'Processing' : 'Workflow'} Point Details
+                </h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {format(point.date, 'EEEE, MMMM d, yyyy \'at\' h:mm a')}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {point.success}
-                </Badge>
-                <ArrowRight className="h-4 w-4 text-green-600" />
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 lg:p-8 space-y-6">
+                {/* Overview Section */}
+                <div>
+                  <h3 className="text-base font-medium text-gray-900 mb-4">Overview</h3>
+                  <div className="bg-white rounded-xl p-6 border border-gray-200">
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="text-center">
+                        <p className="text-3xl font-light text-green-600">{point.success}</p>
+                        <p className="text-sm text-gray-600 mt-1">Success</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{total > 0 ? Math.round((point.success / total) * 100) : 0}%</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-3xl font-light text-blue-600">{point.active}</p>
+                        <p className="text-sm text-gray-600 mt-1">Active</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{total > 0 ? Math.round((point.active / total) * 100) : 0}%</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-3xl font-light text-red-600">{point.failed}</p>
+                        <p className="text-sm text-gray-600 mt-1">Failed</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{total > 0 ? Math.round((point.failed / total) * 100) : 0}%</p>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Total items in this period</span>
+                        <span className="font-medium text-gray-900">{total}</span>
+                      </div>
+                      {metadata && (
+                        <div className="flex items-center justify-between text-sm mt-2">
+                          <span className="text-gray-600">Total available items</span>
+                          <span className="font-medium text-gray-900">{metadata.totalItems}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Details */}
+                <div>
+                  <h3 className="text-base font-medium text-gray-900 mb-4">Status Details</h3>
+                  <div className="space-y-2">
+                    {/* Success */}
+                    <button
+                      onClick={() => handleStatusClick('success')}
+                      className="w-full flex items-center justify-between p-4 rounded-lg border border-green-300 hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-gray-900">Successfully Completed</p>
+                          <p className="text-xs text-gray-500">{point.success} {trendType === 'fetching' ? 'fetchings' : trendType === 'processing' ? 'processings' : 'workflows'}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </button>
+
+                    {/* Active */}
+                    <button
+                      onClick={() => handleStatusClick('active')}
+                      className="w-full flex items-center justify-between p-4 rounded-lg border border-blue-300 hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-gray-900">Currently {trendType === 'fetching' ? 'Fetching' : trendType === 'processing' ? 'Processing' : 'Executing'}</p>
+                          <p className="text-xs text-gray-500">{point.active} items in progress</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </button>
+
+                    {/* Failed */}
+                    <button
+                      onClick={() => handleStatusClick('failed')}
+                      className="w-full flex items-center justify-between p-4 rounded-lg border border-red-300 hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-medium text-gray-900">Failed Operations</p>
+                          <p className="text-xs text-gray-500">{point.failed} {trendType === 'fetching' ? 'fetchings' : trendType === 'processing' ? 'processings' : 'workflows'}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Active */}
-            <div 
-              className="flex items-center justify-between p-4 rounded-xl border border-blue-200 bg-blue-50/50 cursor-pointer hover:bg-blue-50 transition-colors"
-              onClick={() => handleStatusClick('active')}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-blue-100">
-                  <Loader2 className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-blue-900">Currently {trendType}</p>
-                  <p className="text-xs text-blue-700">
-                    {point.active} items ({total > 0 ? Math.round((point.active / total) * 100) : 0}%)
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {point.active}
-                </Badge>
-                <ArrowRight className="h-4 w-4 text-blue-600" />
-              </div>
+            {/* Footer - Material 3 Actions */}
+            <div className="px-6 lg:px-8 py-4 border-t border-gray-200 bg-gray-50">
+              <Button 
+                variant="default"
+                onClick={handleViewAll}
+                className="w-full"
+              >
+                View in History
+              </Button>
             </div>
-
-            {/* Failed */}
-            <div 
-              className="flex items-center justify-between p-4 rounded-xl border border-red-200 bg-red-50/50 cursor-pointer hover:bg-red-50 transition-colors"
-              onClick={() => handleStatusClick('failed')}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-red-100">
-                  <XCircle className="h-4 w-4 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-red-900">Failed</p>
-                  <p className="text-xs text-red-700">
-                    {point.failed} items ({total > 0 ? Math.round((point.failed / total) * 100) : 0}%)
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-red-100 text-red-800">
-                  {point.failed}
-                </Badge>
-                <ArrowRight className="h-4 w-4 text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200">
-          <Button 
-            className="w-full"
-            onClick={() => {
-              onNavigate(historyTab, { date: dateString })
-              onClose()
-            }}
-          >
-            View All Items for This Period
-          </Button>
-        </div>
-      </div>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }

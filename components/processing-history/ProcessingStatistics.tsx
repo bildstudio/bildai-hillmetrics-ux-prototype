@@ -77,9 +77,9 @@ export default function ProcessingStatistics({
   }
 
   return (
-    <div className="w-full lg:w-1/2 bg-white rounded-xl p-6 shadow relative h-[420px]">
-      <div className="space-y-2">
-        <h3 className="text-lg font-bold">Processing statistics</h3>
+    <div className="w-full lg:w-1/2 bg-white rounded-xl p-3 sm:p-4 md:p-6 shadow relative min-h-[420px]">
+      <div className="space-y-2 mb-4">
+        <h3 className="text-lg font-bold pr-2">Processing statistics</h3>
         <p className="text-sm text-gray-500">Overview of rows affected during this processing run.</p>
       </div>
       {loading ? (
@@ -88,18 +88,19 @@ export default function ProcessingStatistics({
           <span className="text-gray-500 text-sm">Loading…</span>
         </div>
       ) : (
-        <div className="mt-6 flex">
-          <div className="w-1/2 relative">
-            <ResponsiveContainer width="100%" height={260}>
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Chart section - full width on mobile */}
+          <div className="w-full md:w-1/2 relative">
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={chartData}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={65}
-                  outerRadius={104}
+                  innerRadius={50}
+                  outerRadius={85}
                   activeIndex={hoverIndex ?? -1}
-                  activeOuterRadius={112}
+                  activeOuterRadius={90}
                   onMouseEnter={(_, idx) => setHoverIndex(idx)}
                   onMouseLeave={() => setHoverIndex(null)}
                   onClick={(_, idx) => handleSegment(idx)}
@@ -117,24 +118,26 @@ export default function ProcessingStatistics({
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="font-bold text-[1.625rem]">{total}</span>
-              <span className="text-xs text-gray-500">Total rows</span>
+              <span className="font-bold text-xl md:text-[1.625rem]">{total}</span>
+              <span className="text-xs text-gray-500 text-center">Total rows</span>
             </div>
           </div>
-          <div className="w-1/2 flex flex-col justify-center space-y-2 pl-4">
+          
+          {/* Legend section - full width on mobile, stacked under chart */}
+          <div className="w-full md:w-1/2 flex flex-col justify-center space-y-2 md:pl-4">
             {items.map((it, idx) => (
               <TooltipProvider key={it.label}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className="flex items-center gap-2 text-sm hover:bg-gray-50 p-2 rounded transition-colors cursor-pointer"
+                      className="flex items-center cursor-pointer gap-3 text-sm hover:bg-gray-50 p-3 rounded-lg transition-colors border border-transparent hover:border-gray-200"
                       onMouseEnter={() => setHoverIndex(idx)}
                       onMouseLeave={() => setHoverIndex(null)}
                       onClick={() => handleSegment(idx)}
                     >
-                      <Badge style={{ backgroundColor: it.color }} className="w-3 h-3 rounded-full p-0" />
-                      <span>{it.label}</span>
-                      <span className="ml-auto font-medium">{chartData[idx].value}</span>
+                      <Badge style={{ backgroundColor: it.color }} className="w-4 h-4 rounded-full p-0" />
+                      <span className="flex-1">{it.label}</span>
+                      <span className="font-semibold text-gray-800">{chartData[idx].value}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>{`${it.label}: ${chartData[idx].value}`}</TooltipContent>

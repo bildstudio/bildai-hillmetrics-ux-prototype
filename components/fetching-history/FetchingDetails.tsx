@@ -209,12 +209,16 @@ export default function FetchingDetails({
                         className={`flex-1 h-6 rounded bg-muted overflow-hidden relative ${
                           isSuccess ? "cursor-pointer" : ""
                         }`}
-                        onClick={() => 
-                          isSuccess && onPreviewFile?.({
-                            id: item.contentID.toString(),
-                            name: item.contentName || "Unknown File"
-                          })
-                        }
+                        onClick={() => {
+                          console.log('🟠 FetchingDetails: Progress bar clicked, isSuccess:', isSuccess, 'onPreviewFile:', !!onPreviewFile)
+                          if (isSuccess && onPreviewFile) {
+                            console.log('🟠 FetchingDetails: Calling onPreviewFile with item:', item)
+                            onPreviewFile({
+                              id: item.contentID.toString(),
+                              name: item.contentName || "Unknown File"
+                            })
+                          }
+                        }}
                       >
                         <div
                           className={`absolute inset-0 ${barColor} flex items-center justify-center text-white text-xs transition-all duration-500`}

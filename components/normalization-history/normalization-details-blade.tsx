@@ -1,17 +1,168 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { BaseBlade } from "@/components/blade/base-blade"
-import { X, MoreVertical, Info, Globe, Eye, Workflow, Minus } from "lucide-react"
+import { X, MoreVertical, Info, Globe, Eye, Workflow, Minus, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useBladeStack } from "@/lib/blade-stack-context"
 import { useViewBlade } from "@/lib/view-blade-context"
 import { useEditBlade } from "@/lib/edit-blade-context"
 import FluxDetailsInfoPanel from "../processing-history/FluxDetailsInfoPanel"
 import NormalizationDiagram from "./NormalizationDiagram"
+
+const TABS = [
+  { id: "summary", label: "Summary", icon: Globe },
+  { id: "diagram", label: "View as diagram", icon: Workflow },
+  { id: "details", label: "Details", icon: Eye },
+]
+
+const ResponsiveTabs = ({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string
+  onTabChange: (tabId: string) => void
+}) => {
+  const [visibleTabs, setVisibleTabs] = useState(TABS)
+  const [hiddenTabs, setHiddenTabs] = useState<typeof TABS>([])
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const tabsContainerRef = useRef<HTMLDivElement>(null)
+  const measurementRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  useEffect(() => {
+    const calculateTabs = () => {
+      const container = tabsContainerRef.current
+      if (!container) return
+
+      const containerWidth = container.offsetWidth
+      const moreButtonWidth = 120
+      let totalWidth = 0
+      let visibleCount = 0
+
+      for (let i = 0; i < TABS.length; i++) {
+        const measurementEl = measurementRefs.current[i]
+        if (!measurementEl) continue
+
+        const tabWidth = measurementEl.offsetWidth + 8
+
+        if (
+          totalWidth + tabWidth >
+          containerWidth - (hiddenTabs.length > 0 || i < TABS.length - 1 ? moreButtonWidth : 0)
+        ) {
+          break
+        }
+
+        totalWidth += tabWidth
+        visibleCount++
+      }
+
+      if (visibleCount === 0) visibleCount = 1
+
+      const newVisibleTabs = TABS.slice(0, visibleCount)
+      const newHiddenTabs = TABS.slice(visibleCount)
+
+      setVisibleTabs(newVisibleTabs)
+      setHiddenTabs(newHiddenTabs)
+    }
+
+    const timeoutId = setTimeout(calculateTabs, 100)
+
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(calculateTabs, 100)
+    })
+
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  const handleDropdownSelect = (tabId: string) => {
+    onTabChange(tabId)
+    setIsMoreOpen(false)
+  }
+
+  return (
+    <>
+      <TabsList
+        ref={tabsContainerRef}
+        className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden"
+      >
+        {visibleTabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </TabsTrigger>
+        ))}
+        {hiddenTabs.length > 0 && (
+          <DropdownMenu 
+            open={isMoreOpen} 
+            onOpenChange={setIsMoreOpen}
+            modal={false}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 ml-auto px-4 flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                More ({hiddenTabs.length}) <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              forceMount 
+              className="z-[10050]" 
+              style={{ zIndex: 10050 }}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {hiddenTabs.map((tab) => (
+                <DropdownMenuItem key={tab.id} onSelect={() => handleDropdownSelect(tab.id)}>
+                  <tab.icon className="mr-2 h-4 w-4" />
+                  {tab.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </TabsList>
+      <div className="absolute top-0 left-0 opacity-0 pointer-events-none -z-10">
+        <div className="flex">
+          {TABS.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(el) => {
+                measurementRefs.current[index] = el
+              }}
+              className="flex items-center gap-2 whitespace-nowrap px-4 py-3 font-medium"
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 interface NormalizationDetailsBladeProps {
   normalizationId: number
@@ -198,29 +349,7 @@ export default function NormalizationDetailsBlade({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
               <div className="sticky top-0 z-10 bg-[#F1F3F4] border-b border-[#e5e7eb] shrink-0">
                 <div className="px-4 md:px-6">
-                  <TabsList className="relative flex items-center justify-start bg-transparent p-0 h-auto w-full overflow-hidden">
-                    <TabsTrigger
-                      value="summary"
-                      className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                    >
-                      <Globe className="h-4 w-4" />
-                      Summary
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="diagram"
-                      className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                    >
-                      <Workflow className="h-4 w-4" />
-                      View as diagram
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="details"
-                      className="flex items-center gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary bg-transparent text-gray-600 data-[state=active]:text-gray-900 font-medium py-3 px-4 transition-colors duration-200 hover:text-gray-900 hover:border-gray-400 whitespace-nowrap flex-shrink-0"
-                    >
-                      <Eye className="h-4 w-4" />
-                      Details
-                    </TabsTrigger>
-                  </TabsList>
+                  <ResponsiveTabs activeTab={activeTab} onTabChange={setActiveTab} />
                 </div>
               </div>
               

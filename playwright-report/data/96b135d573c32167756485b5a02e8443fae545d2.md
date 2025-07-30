@@ -1,0 +1,409 @@
+# Page snapshot
+
+```yaml
+- button "Open Next.js Dev Tools":
+  - img
+- alert
+- complementary:
+  - button "Collapse sidebar":
+    - img
+  - link "HillMetrics Logo":
+    - /url: /dashboard
+    - img "HillMetrics Logo"
+  - navigation:
+    - button "Create New":
+      - img
+      - text: Create New
+    - button "Flux management":
+      - text: Flux management
+      - img
+    - link "Dashboard":
+      - /url: /dashboard
+      - img
+      - text: Dashboard
+    - link "Flux List":
+      - /url: /list-of-fluxs
+      - img
+      - text: Flux List
+    - button "History":
+      - text: History
+      - img
+    - link "Workflow Execution":
+      - /url: /flux-list/workflow-execution-log
+      - img
+      - text: Workflow Execution
+    - link "Fetching history":
+      - /url: /flux-list/fetching-history
+      - img
+      - text: Fetching history
+    - link "Processing history":
+      - /url: /flux-list/processing-history
+      - img
+      - text: Processing history
+    - link "Normalization history":
+      - /url: /normalization-history
+      - img
+      - text: Normalization history
+    - link "Refinement history":
+      - /url: /refinement-history
+      - img
+      - text: Refinement history
+    - link "Calculation history":
+      - /url: /calculation-history
+      - img
+      - text: Calculation history
+    - link "Fetched content":
+      - /url: /flux-list/processing-history/fetched-content
+      - img
+      - text: Fetched content
+    - link "Error logs":
+      - /url: /error-logs
+      - img
+      - text: Error logs
+    - link "Recent activity":
+      - /url: /recent-activity
+      - img
+      - text: Recent activity
+    - button "Working pages":
+      - text: Working pages
+      - img
+    - link "Dashboard-2":
+      - /url: /dashboard-2
+      - img
+      - text: Dashboard-2
+    - link "Flux List 2":
+      - /url: /flux-list
+      - img
+      - text: Flux List 2
+    - link "Financial Workflow":
+      - /url: /financial-workflow
+      - img
+      - text: Financial Workflow
+    - link "System Health":
+      - /url: /system-health
+      - img
+      - text: System Health
+    - link "Settings":
+      - /url: "#"
+      - img
+      - text: Settings
+    - link "User Management":
+      - /url: "#"
+      - img
+      - text: User Management
+    - link "Analytics":
+      - /url: "#"
+      - img
+      - text: Analytics
+    - link "Security":
+      - /url: "#"
+      - img
+      - text: Security
+    - link "Help & Support":
+      - /url: "#"
+      - img
+      - text: Help & Support
+  - text: System health
+- banner:
+  - img
+  - textbox "Search..."
+  - button "Show advanced filters":
+    - img
+  - button "Aplikacije":
+    - img
+  - button "Notifikacije":
+    - img
+  - button "Podešavanja":
+    - img
+  - button "Korisnički avatar":
+    - img "Korisnički avatar"
+- main:
+  - tablist:
+    - tab "Fetchings" [selected]
+    - tab "Processings"
+  - heading "Status overview of flux fetchings" [level=3]
+  - paragraph:
+    - text: Get a snapshot of the status of your flux fetchings.
+    - button "View all fetchings"
+  - application
+  - text: 70012 Total fetchings Success 63147 Currently fetching 12 Failed 6853
+  - heading "Recent Activity" [level=3]
+  - paragraph:
+    - text: Stay up to date with what's happening across the flux.
+    - link "View all activity":
+      - /url: "#activity-tab"
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 35909 , executed within workflow -, started on Jul 15, 2025 at 1:41 PM and finished at Jul 15, 2025 at 1:43 PM.
+  - paragraph: Processed 100% of content in 1 minute. Total 2 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 39739 , executed within workflow -, started on Jul 15, 2025 at 1:41 PM and finished at Jul 15, 2025 at 1:41 PM.
+  - paragraph: Feching 100% of content in 0 minutes. Total 2 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 38218 , executed within workflow -, started on Jul 15, 2025 at 1:06 PM and finished at Jul 15, 2025 at 1:07 PM.
+  - paragraph: Processed 100% of content in 1 minute. Total 3 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 42333 , executed within workflow -, started on Jul 15, 2025 at 1:05 PM and finished at Jul 15, 2025 at 1:05 PM.
+  - paragraph: Feching 100% of content in 0 minutes. Total 3 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Flux is currently fetching" [level=4]
+  - text: currently fetching
+  - paragraph: "Fetching process 57485 is in progress in workflow -:"
+  - paragraph: 53% completed in 0 min, currently 0 files.
+  - paragraph:
+    - text: "Executing:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching failed with errors" [level=4]
+  - text: fetching failed
+  - paragraph: "Fetching process 42449 failed in workflow -:"
+  - paragraph: Reason – Unknown Flux Type.
+  - paragraph: Started Jul 15, 2025 at 11:53 AM, stopped Jul 15, 2025 at 11:54 AM.
+  - paragraph: Processed 80% before error, lasted 0 minutes.
+  - paragraph: "Affected files: 0."
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 42094 , executed within workflow -, started on Jul 15, 2025 at 10:05 AM and finished at Jul 15, 2025 at 10:07 AM.
+  - paragraph: Processed 100% of content in 2 minutes. Total 3 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 46650 , executed within workflow -, started on Jul 15, 2025 at 10:04 AM and finished at Jul 15, 2025 at 10:04 AM.
+  - paragraph: Feching 100% of content in 1 minute. Total 3 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 35908 , executed within workflow -, started on Jul 15, 2025 at 3:44 AM and finished at Jul 15, 2025 at 3:48 AM.
+  - paragraph: Processed 100% of content in 4 minutes. Total 2 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 39738 , executed within workflow -, started on Jul 15, 2025 at 3:41 AM and finished at Jul 15, 2025 at 3:43 AM.
+  - paragraph: Feching 100% of content in 2 minutes. Total 2 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 52845 , executed within workflow -, started on Jul 15, 2025 at 2:42 AM and finished at Jul 15, 2025 at 2:46 AM.
+  - paragraph: Processed 100% of content in 3 minutes. Total 2 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 58598 , executed within workflow -, started on Jul 15, 2025 at 2:42 AM and finished at Jul 15, 2025 at 2:42 AM.
+  - paragraph: Feching 100% of content in 0 minutes. Total 2 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 11 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 38341 , executed within workflow -, started on Jul 15, 2025 at 1:13 AM and finished at Jul 15, 2025 at 1:13 AM.
+  - paragraph: Processed 100% of content in 0 minutes. Total 3 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 42467 , executed within workflow -, started on Jul 15, 2025 at 1:12 AM and finished at Jul 15, 2025 at 1:12 AM.
+  - paragraph: Feching 100% of content in 1 minute. Total 3 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 51837 , executed within workflow -, started on Jul 15, 2025 at 1:03 AM and finished at Jul 15, 2025 at 1:04 AM.
+  - paragraph: Processed 100% of content in 0 minutes. Total 3 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 57484 , executed within workflow -, started on Jul 15, 2025 at 1:02 AM and finished at Jul 15, 2025 at 1:03 AM.
+  - paragraph: Feching 100% of content in 1 minute. Total 3 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 56310 , executed within workflow -, started on Jul 15, 2025 at 12:20 AM and finished at Jul 15, 2025 at 12:22 AM.
+  - paragraph: Processed 100% of content in 2 minutes. Total 1 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Fetching completed successfully" [level=4]
+  - text: fetching success
+  - paragraph: Feching process 62463 , executed within workflow -, started on Jul 15, 2025 at 12:19 AM and finished at Jul 15, 2025 at 12:19 AM.
+  - paragraph: Feching 100% of content in 1 minute. Total 1 files.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Fetching failed with errors" [level=4]
+  - text: fetching failed
+  - paragraph: "Fetching process 42448 failed in workflow -:"
+  - paragraph: Reason – Inconsistent Metadata.
+  - paragraph: Started Jul 14, 2025 at 11:53 PM, stopped Jul 14, 2025 at 11:54 PM.
+  - paragraph: Processed 11% before error, lasted 1 minute.
+  - paragraph: "Affected files: 0."
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - img
+  - heading "Processing completed successfully" [level=4]
+  - text: processing success
+  - paragraph: Processing job 38217 , executed within workflow -, started on Jul 14, 2025 at 9:07 PM and finished at Jul 14, 2025 at 9:08 PM.
+  - paragraph: Processed 100% of content in 1 minute. Total 2 files processed.
+  - paragraph:
+    - text: "Executed by:"
+    - strong: System
+    - text: · 12 days ago
+  - tablist:
+    - tab "Fetching" [selected]
+    - tab "Processings"
+  - heading "Duration of fetching" [level=3]
+  - paragraph:
+    - text: See how long your flux fetchings take.
+    - button "View detailed durations"
+  - text: 0-1 min 49 % 1-2 min 51 % 2-5 min 0 % 5-10 min 0 % 10-20 min 0 % 20+ min 0 %
+  - tablist:
+    - tab "Fetching" [selected]
+    - tab "Processings"
+  - heading "Type of fetching errors" [level=3]
+  - paragraph:
+    - text: Understand what went wrong during fetchings.
+    - button "Explore error fetchings"
+  - text: Flux Does Not Match Mail 5 % Error While Processing Attachment 6 % Custom Implementation Error 6 % Configuration Error 6 % Error When Trying To Link With Raw Database 5 % Empty Content 5 % Unknown Flux Type 5 % Error While Processing Email 6 % Http Fetch Error 6 % Email Fetch Error 6 % Unable To Deserialize Json Content 6 % Undefined 6 % One Attachment For Multiple Flux 6 % No Attachment 5 % Unsupported Content Location 5 % Already Exist In Raw Database 5 % Attachment Found But Does Not Match Attachment Rule 5 % Inconsistent Metadata 6 %
+  - img
+  - heading "Flux fetching trend" [level=3]
+  - paragraph:
+    - text: Track how flux fetching evolves over time.
+    - button "View all fetching items"
+  - combobox:
+    - img
+    - text: ALL
+  - button "Fetching"
+  - button "Processing"
+  - img
+  - text: Success
+  - img
+  - text: Active
+  - img
+  - text: Failed
+  - paragraph: Click legend to toggle lines • Click chart points for details
+  - list:
+    - listitem:
+      - img "active legend icon"
+      - text: active
+    - listitem:
+      - img "failed legend icon"
+      - text: failed
+    - listitem:
+      - img "success legend icon"
+      - text: success
+  - application:
+    - text: Mar 2022 Jul 2022 Nov 2022 Mar 2023 Jul 2023 Nov 2023 Mar 2024 Jul 2024 Nov 2024 Mar 2025 Jul 2025 0 2500 5000 7500 10000
+    - 'slider "Min value: undefined, Max value: undefined"'
+    - 'slider "Min value: undefined, Max value: undefined"'
+- button:
+  - img
+- heading "New Flux" [level=1]
+- button "Save" [disabled]
+- text: 1 Basic information 2 Flux configuration 3 Type configuration
+- heading "Basic Information" [level=3]
+- text: Flux name *
+- textbox "Flux name *"
+- text: Source
+- combobox "Source": Select source
+- text: Comment
+- textbox "Comment"
+- text: Description
+- textbox "Description"
+- heading "Scheduling" [level=3]
+- heading "Fetch schedule" [level=4]
+- text: Status
+- radiogroup:
+  - radio "Active"
+  - text: Active
+  - radio "Inactive" [checked]:
+    - img
+  - text: Inactive
+- text: Frequency Type
+- combobox: Select frequency type
+- heading "Process schedule" [level=4]
+- text: Status
+- radiogroup:
+  - radio "Active"
+  - text: Active
+  - radio "Inactive" [checked]:
+    - img
+  - text: Inactive
+- text: Frequency Type
+- combobox: Select frequency type
+- button "Previous" [disabled]
+- text: Step 1 of 3 - Completion
+- progressbar
+- button:
+  - img
+- button "Next" [disabled]
+```

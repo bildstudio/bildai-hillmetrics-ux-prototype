@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2, XCircle, Calendar, TrendingUp } from "lucide-react";
+import { CheckCircle, Loader2, XCircle, Calendar } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -236,7 +237,8 @@ export default function FluxTrend({
       if (!json.error) {
         const grouped = groupData(json.data, range);
         setData(grouped);
-        setIndices({ start: 0, end: grouped.length - 1 });
+        // Always show full range when changing time period
+        setIndices({ start: 0, end: Math.max(0, grouped.length - 1) });
       } else {
         setData([]);
         setIndices({ start: 0, end: 0 });
@@ -263,6 +265,7 @@ export default function FluxTrend({
     
     return (
       <circle
+        key={`dot-${payload?.date}-${color}`}
         cx={cx}
         cy={cy}
         r={4}
@@ -291,6 +294,7 @@ export default function FluxTrend({
     
     return (
       <circle
+        key={`active-dot-${payload?.date}-${color}`}
         cx={cx}
         cy={cy}
         r={6}
@@ -327,45 +331,48 @@ export default function FluxTrend({
 
   return (
     <>
-      <div className="w-full bg-white rounded-2xl p-6 shadow-sm border border-gray-200 relative">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">
-                {activeTab === "fetching"
-                  ? "Flux fetching trend"
-                  : "Flux processing trend"}
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600">
+      <div className="w-full bg-white rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm border border-gray-200 relative">
+        {/* Mobile-first header layout */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+          <div className="space-y-2 flex-1">
+            <h3 className="text-lg font-bold pr-2">
+              {activeTab === "fetching"
+                ? "Flux fetching trend"
+                : "Flux processing trend"}
+            </h3>
+            <p className="text-sm text-gray-500">
               {activeTab === "fetching"
                 ? "Track how flux fetching evolves over time."
                 : "Track how flux processing evolves over time."}{" "}
               <button
                 onClick={() => onNavigate(historyTab)}
-                className="text-blue-600 underline hover:text-blue-500 transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 py-1 rounded-md transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
               >
                 {activeTab === "fetching"
                   ? "View all fetching items"
                   : "View all processing items"}
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </p>
           </div>
           
-          {/* Time Range Selector - Material 3 Tonal Select */}
-          <div className="flex items-center gap-3">
+          {/* Controls positioned below title on mobile, to the right on larger screens */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
             <Select value={range} onValueChange={setRange}>
-              <SelectTrigger className="w-32 bg-gray-50 border-gray-300">
-                <Calendar className="h-4 w-4 mr-2 text-gray-600" />
-                <SelectValue />
+              <SelectTrigger className="w-24 bg-white border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 shadow-sm rounded-lg">
+                <Calendar className="h-4 w-4 text-gray-600" />
+                <SelectValue className="font-medium text-gray-900" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
                 {ranges.map((r) => (
-                  <SelectItem key={r.label} value={r.label} title={r.tooltip}>
+                  <SelectItem 
+                    key={r.label} 
+                    value={r.label} 
+                    title={r.tooltip}
+                    className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer transition-colors font-medium"
+                  >
                     {r.label}
                   </SelectItem>
                 ))}
@@ -373,71 +380,67 @@ export default function FluxTrend({
             </Select>
             
             {/* Tab Selector */}
-            <div className="flex bg-gray-100 rounded-full p-1">
-              <Button
-                variant={activeTab === "fetching" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("fetching")}
-                className={`px-4 py-2 text-sm rounded-full transition-all ${
-                  activeTab === "fetching" 
-                    ? "bg-blue-600 text-white shadow-sm" 
-                    : "text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Fetching
-              </Button>
-              <Button
-                variant={activeTab === "processings" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab("processings")}
-                className={`px-4 py-2 text-sm rounded-full transition-all ${
-                  activeTab === "processings" 
-                    ? "bg-blue-600 text-white shadow-sm" 
-                    : "text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Processing
-              </Button>
-            </div>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+              <TabsList className="bg-gray-100 p-1 rounded-lg">
+                <TabsTrigger value="fetching" className="px-3 py-1.5 text-sm rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  Fetching
+                </TabsTrigger>
+                <TabsTrigger value="processings" className="px-3 py-1.5 text-sm rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                  Processing
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 mb-4">
-          <Badge
+        {/* Legend - Material 3 Design */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <button
             onMouseEnter={() => setHoverLine("success")}
             onMouseLeave={() => setHoverLine(null)}
             onClick={() => toggleLine("success")}
-            className={`cursor-pointer transition-all bg-green-600 text-white hover:bg-green-500 ${
-              visibleLines.success ? "opacity-100" : "opacity-40"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              visibleLines.success 
+                ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100" 
+                : "bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <CheckCircle className="h-3 w-3 mr-1" />
+            <div className={`w-3 h-3 rounded-full transition-colors ${
+              visibleLines.success ? "bg-green-500" : "bg-gray-300"
+            }`} />
             Success
-          </Badge>
-          <Badge
+          </button>
+          <button
             onMouseEnter={() => setHoverLine("active")}
             onMouseLeave={() => setHoverLine(null)}
             onClick={() => toggleLine("active")}
-            className={`cursor-pointer transition-all bg-blue-600 text-white hover:bg-blue-500 ${
-              visibleLines.active ? "opacity-100" : "opacity-40"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              visibleLines.active 
+                ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100" 
+                : "bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <Loader2 className="h-3 w-3 mr-1" />
+            <div className={`w-3 h-3 rounded-full transition-colors ${
+              visibleLines.active ? "bg-blue-500" : "bg-gray-300"
+            }`} />
             Active
-          </Badge>
-          <Badge
+          </button>
+          <button
             onMouseEnter={() => setHoverLine("failed")}
             onMouseLeave={() => setHoverLine(null)}
             onClick={() => toggleLine("failed")}
-            className={`cursor-pointer transition-all bg-red-600 text-white hover:bg-red-500 ${
-              visibleLines.failed ? "opacity-100" : "opacity-40"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              visibleLines.failed 
+                ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100" 
+                : "bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <XCircle className="h-3 w-3 mr-1" />
+            <div className={`w-3 h-3 rounded-full transition-colors ${
+              visibleLines.failed ? "bg-red-500" : "bg-gray-300"
+            }`} />
             Failed
-          </Badge>
-          <p className="text-xs text-gray-500 ml-2">
+          </button>
+          <p className="text-xs text-gray-500 ml-auto">
             Click legend to toggle lines • Click chart points for details
           </p>
         </div>
@@ -456,11 +459,13 @@ export default function FluxTrend({
         >
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <span className="text-sm text-gray-500">Loading...</span>
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+              <span className="text-sm text-gray-500">Loading trend data...</span>
             </div>
           ) : data.length === 0 ? (
-            <div className="flex items-center justify-center text-gray-500 h-full">
-              No fetching/processing in selected period
+            <div className="flex flex-col items-center justify-center text-gray-500 h-full">
+              <span>No {activeTab} data in selected period</span>
+              <span className="text-xs text-gray-400 mt-1">Try selecting a different time range</span>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -477,6 +482,10 @@ export default function FluxTrend({
                     if (range === "1D") return format(d, "HH:mm");
                     if (range === "1W" || range === "2W")
                       return format(d, "MMM d");
+                    if (range === "1M" || range === "3M")
+                      return format(d, "MMM d");
+                    if (range === "6M" || range === "1Y")
+                      return format(d, "MMM yyyy");
                     if (range === "ALL") return format(d, "MMM yyyy");
                     return format(d, "MMM d");
                   }}
@@ -485,10 +494,10 @@ export default function FluxTrend({
                   tickLine={false}
                   axisLine={false}
                   type="number"
-                  domain={[
+                  domain={displayData.length > 0 ? [
                     displayData[0].date.getTime(),
                     displayData[displayData.length - 1].date.getTime(),
-                  ]}
+                  ] : [0, 1]}
                   scale="time"
                 />
                 <YAxis
@@ -532,19 +541,27 @@ export default function FluxTrend({
                     dot={createCustomDot("#dc2626")}
                   />
                 )}
-                <Brush
-                  dataKey="date"
-                  height={brushHeight}
-                  travellerWidth={10}
-                  startIndex={indices.start}
-                  endIndex={indices.end}
-                  onChange={(e) =>
-                    setIndices({
-                      start: e.startIndex ?? 0,
-                      end: e.endIndex ?? data.length - 1,
-                    })
-                  }
-                />
+                {data.length > 10 && (
+                  <Brush
+                    dataKey="date"
+                    height={brushHeight}
+                    travellerWidth={10}
+                    startIndex={indices.start}
+                    endIndex={indices.end}
+                    onChange={(e) =>
+                      setIndices({
+                        start: e.startIndex ?? 0,
+                        end: e.endIndex ?? data.length - 1,
+                      })
+                    }
+                    tickFormatter={(v) => {
+                      const d = new Date(v);
+                      if (range === "1D") return format(d, "HH:mm");
+                      if (range === "ALL") return format(d, "MMM yy");
+                      return format(d, "MMM d");
+                    }}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           )}

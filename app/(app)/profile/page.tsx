@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { generateAvatarProps } from "@/lib/avatar-utils"
 import {
   User,
   Mail,
@@ -48,8 +49,11 @@ export default function ProfilePage() {
     joinDate: "March 15, 2022",
     lastLogin: "Today at 09:34 AM",
     status: "Active",
-    avatar: "/placeholder.svg?width=120&height=120"
+    avatar: null // Postavi na null da bi se prikazali inicijali
   }
+  
+  // Generiši avatar props
+  const avatarProps = generateAvatarProps(userData.name, userData.email)
 
   const stats = {
     totalWorkflows: 1247,
@@ -105,7 +109,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
@@ -136,8 +140,14 @@ export default function ProfilePage() {
                 <div className="flex justify-center mb-4">
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={userData.avatar} alt={userData.name} />
-                    <AvatarFallback className="text-2xl font-semibold">
-                      {userData.name.split(' ').map(n => n[0]).join('')}
+                    <AvatarFallback 
+                      className="text-2xl font-semibold"
+                      style={{ 
+                        backgroundColor: avatarProps.backgroundColor,
+                        color: avatarProps.textColor
+                      }}
+                    >
+                      {avatarProps.initials}
                     </AvatarFallback>
                   </Avatar>
                 </div>

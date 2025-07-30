@@ -1,0 +1,26 @@
+{"version":8,"type":"context-options","origin":"testRunner","browserName":"","options":{},"platform":"darwin","wallTime":1753528540299,"monotonicTime":115593.037,"sdkLanguage":"javascript"}
+{"type":"before","callId":"hook@1","stepId":"hook@1","startTime":115596.09,"class":"Test","method":"step","title":"Before Hooks","params":{},"stack":[]}
+{"type":"before","callId":"hook@2","stepId":"hook@2","parentId":"hook@1","startTime":115596.503,"class":"Test","method":"step","title":"beforeEach hook","params":{},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":4,"column":8}]}
+{"type":"before","callId":"fixture@3","stepId":"fixture@3","parentId":"hook@2","startTime":115598.616,"class":"Test","method":"step","title":"Fixture \"browser\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@4","stepId":"pw:api@4","parentId":"fixture@3","startTime":115600.243,"class":"Test","method":"step","title":"Launch browser","params":{"handleSIGINT":"false","tracesDir":"/Users/tarikzaimovic/mind-hillmetric-final/test-results/.playwright-artifacts-13/traces","headless":"true","ignoreDefaultArgs":"undefined","ignoreAllDefaultArgs":"false","env":"undefined","timeout":"180000"},"stack":[]}
+{"type":"after","callId":"pw:api@4","endTime":115883.944,"annotations":[]}
+{"type":"after","callId":"fixture@3","endTime":115884.072,"annotations":[]}
+{"type":"before","callId":"fixture@5","stepId":"fixture@5","parentId":"hook@2","startTime":115884.642,"class":"Test","method":"step","title":"Fixture \"context\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@6","stepId":"pw:api@6","parentId":"fixture@5","startTime":115885.346,"class":"Test","method":"step","title":"Create context","params":{"acceptDownloads":"accept","bypassCSP":"false","colorScheme":"light","deviceScaleFactor":"1","hasTouch":"false","ignoreHTTPSErrors":"false","isMobile":"false","javaScriptEnabled":"true","locale":"en-US","offline":"false","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.7258.5 Safari/537.36","viewport":"Object","baseURL":"http://localhost:3000","serviceWorkers":"allow","recordVideo":"Object","selectorEngines":"[]","testIdAttributeName":"data-testid","noDefaultViewport":"false","extraHTTPHeaders":"undefined","storageState":"undefined","reducedMotion":"undefined","forcedColors":"undefined","contrast":"undefined","clientCertificates":"undefined"},"stack":[]}
+{"type":"after","callId":"pw:api@6","endTime":115889.288,"annotations":[]}
+{"type":"after","callId":"fixture@5","endTime":115891.501,"annotations":[]}
+{"type":"before","callId":"fixture@7","stepId":"fixture@7","parentId":"hook@2","startTime":115891.79,"class":"Test","method":"step","title":"Fixture \"page\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@8","stepId":"pw:api@8","parentId":"fixture@7","startTime":115892.408,"class":"Test","method":"step","title":"Create page","params":{},"stack":[]}
+{"type":"after","callId":"pw:api@8","endTime":116011.462,"annotations":[]}
+{"type":"after","callId":"fixture@7","endTime":116011.535,"annotations":[]}
+{"type":"before","callId":"pw:api@9","stepId":"pw:api@9","parentId":"hook@2","startTime":116012.499,"class":"Test","method":"step","title":"Navigate to \"/login\"","params":{"url":"/login","waitUntil":"load","timeout":"0"},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":6,"column":16}]}
+{"type":"after","callId":"pw:api@9","endTime":116252.786,"annotations":[]}
+{"type":"after","callId":"hook@2","endTime":116252.84,"annotations":[]}
+{"type":"after","callId":"hook@1","endTime":116253.08,"annotations":[]}
+{"type":"before","callId":"expect@10","stepId":"expect@10","startTime":116254.15,"class":"Test","method":"step","title":"Expect \"toBeVisible\"","params":{},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":11,"column":55}]}
+{"type":"after","callId":"expect@10","endTime":116307.417,"annotations":[]}
+{"type":"before","callId":"expect@11","stepId":"expect@11","startTime":116308.756,"class":"Test","method":"step","title":"Expect \"toBeVisible\"","params":{},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":12,"column":58}]}
+{"type":"after","callId":"expect@11","endTime":116316.071,"annotations":[]}
+{"type":"before","callId":"expect@12","stepId":"expect@12","startTime":116316.475,"class":"Test","method":"step","title":"Expect \"toBeVisible\"","params":{},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":13,"column":57}]}
+{"type":"after","callId":"expect@12","endTime":116322.693,"annotations":[]}
+{"type":"before","callId":"expect@13","stepId":"expect@13","startTime":116323.004,"class":"Test","method":"step","title":"Expect \"toContainText\"","params":{"expected":"Object"},"stack":[{"file":"/Users/tarikzaimovic/mind-hillmetric-final/__tests__/e2e/auth/login-flow.spec.ts","line":16,"column":42}]}

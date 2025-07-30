@@ -13,8 +13,8 @@ export default function RecentActivityPage() {
     (id: number) => {
       openBlade(
         () => import("@/components/processing-history/processing-history-details-blade"),
-        { processingId: id, fluxName: `Flux ${id}`, fluxId: "all", onClose: closeTopBlade },
-        `Flux ${id}`,
+        { processingId: id, fluxName: `Processing ${id}`, fluxId: "", onClose: closeTopBlade },
+        `Processing ${id}`,
       )
     },
     [openBlade, closeTopBlade],
@@ -24,8 +24,8 @@ export default function RecentActivityPage() {
     (id: number) => {
       openBlade(
         () => import("@/components/fetching-history/fetching-history-details-blade"),
-        { fetchingId: id, fluxName: `Flux ${id}`, fluxId: "all", onClose: closeTopBlade },
-        `Flux ${id}`,
+        { fetchingId: id, fluxName: `Fetching ${id}`, fluxId: "", onClose: closeTopBlade },
+        `Fetching ${id}`,
       )
     },
     [openBlade, closeTopBlade],
@@ -35,7 +35,7 @@ export default function RecentActivityPage() {
     (id: number) => {
       openBlade(
         () => import("@/components/normalization-history/NormalizationDetailsBlade"),
-        { normalizationId: id, fluxName: `Flux ${id}`, fluxId: "all", onClose: closeTopBlade },
+        { normalizationId: id, fluxName: `Flux ${id}`, fluxId: "", onClose: closeTopBlade },
         `Flux ${id}`,
       )
     },
@@ -46,7 +46,7 @@ export default function RecentActivityPage() {
     (id: number) => {
       openBlade(
         () => import("@/components/refinement-history/RefinementDetailsBlade"),
-        { refinementId: id, fluxName: `Flux ${id}`, fluxId: "all", onClose: closeTopBlade },
+        { refinementId: id, fluxName: `Flux ${id}`, fluxId: "", onClose: closeTopBlade },
         `Flux ${id}`,
       )
     },
@@ -57,7 +57,7 @@ export default function RecentActivityPage() {
     (id: number) => {
       openBlade(
         () => import("@/components/calculation-history/CalculationDetailsBlade"),
-        { calculationId: id, fluxName: `Flux ${id}`, fluxId: "all", onClose: closeTopBlade },
+        { calculationId: id, fluxName: `Flux ${id}`, fluxId: "", onClose: closeTopBlade },
         `Flux ${id}`,
       )
     },

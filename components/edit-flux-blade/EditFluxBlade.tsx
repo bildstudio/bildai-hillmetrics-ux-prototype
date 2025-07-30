@@ -310,13 +310,31 @@ export default function EditFluxBlade({ reportId, onReady }: { reportId: string;
                 <Minus className="h-4 w-4" />
               </Button>
             )}
-            <DropdownMenu>
+            <DropdownMenu 
+              modal={false}
+              onOpenChange={(open) => {
+                // Prevent blade from closing when dropdown opens
+                if (open) {
+                  document.body.style.pointerEvents = 'auto'
+                }
+              }}
+            >
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:bg-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-gray-500 hover:bg-gray-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64" align="end">
+              <DropdownMenuContent 
+                className="w-64 z-[10050]" 
+                align="end"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <DropdownMenuItem onClick={() => console.log("View action")}>
                   <Eye className="mr-2 h-4 w-4" />
                   <span>View</span>

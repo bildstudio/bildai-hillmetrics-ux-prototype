@@ -982,7 +982,7 @@ const ReportsGrid: React.FC = () => {
             )}
             onClick={() => setShowSavedFiltersPanel(false)}
           />
-          <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[9999]">
+          <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[9999]">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#040404]">Saved Filters</h3>
@@ -1059,8 +1059,8 @@ const ReportsGrid: React.FC = () => {
           {showAddFilterPanel && !editingFilter && (
             <div
               className={cn(
-                "fixed top-0 h-full w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[9999]",
-                showSpecificFilterPanel ? "right-[307.2px]" : "right-0",
+                "fixed top-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col transition-all duration-300 z-[9999]",
+                showSpecificFilterPanel ? "md:right-[307.2px] right-0" : "right-0",
               )}
             >
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
@@ -1122,7 +1122,7 @@ const ReportsGrid: React.FC = () => {
           )}
           {showAddFilterPanel && !editingFilter && showSpecificFilterPanel && (
             <div
-              className="fixed top-0 left-0 right-96 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[9999]"
+              className="fixed top-0 left-0 md:right-96 right-0 h-full bg-black bg-opacity-10 transition-opacity duration-600 z-[9999]"
               onClick={() => {
                 setShowSpecificFilterPanel(false)
                 setSelectedFilterField(null)
@@ -1130,7 +1130,7 @@ const ReportsGrid: React.FC = () => {
             />
           )}
           {showSpecificFilterPanel && selectedFilterField && (
-            <div className="fixed top-0 right-0 h-full w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[10000]">
+            <div className="fixed top-0 right-0 h-full w-full md:w-96 bg-white shadow-xl flex flex-col animate-in slide-in-from-right duration-300 z-[10000]">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
@@ -1252,8 +1252,14 @@ const ReportsGrid: React.FC = () => {
           <div className="flex items-center space-x-4 flex-shrink-0">
             <div className="flex items-center space-x-2 text-sm text-[#505050]">
               <span>
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalReportsCount)} of{" "}
-                {totalReportsCount}
+                <span className="hidden sm:inline">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalReportsCount)} of{" "}
+                  {totalReportsCount}
+                </span>
+                <span className="sm:hidden">
+                  {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalReportsCount)} of{" "}
+                  {totalReportsCount > 999 ? "..." : totalReportsCount}
+                </span>
               </span>
               <Button
                 variant="ghost"

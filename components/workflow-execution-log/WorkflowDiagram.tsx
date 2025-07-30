@@ -485,11 +485,8 @@ export default function WorkflowDiagram({
         const status = workflowItem.status?.toLowerCase() || "unknown"
         const progress = workflowItem.progress ?? 0
         const duration = (() => {
-          if (workflowItem.duration_active == null) return "00:00"
-          const totalSec = Math.round(workflowItem.duration_active * 60)
-          const m = Math.floor(totalSec / 60)
-          const s = totalSec % 60
-          return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+          if (workflowItem.duration_seconds == null) return "–"
+          return `${Math.round(workflowItem.duration_seconds / 60)} min`
         })()
         const started = workflowItem.started_at
           ? format(parseISO(workflowItem.started_at), "yyyy-MM-dd HH:mm")
@@ -688,11 +685,8 @@ export default function WorkflowDiagram({
           : "Loading"
         const stageProgress = detail?.progress ?? 0
         const duration = (() => {
-          if (detail?.duration_minutes == null) return "00:00"
-          const totalSec = Math.round(detail.duration_minutes * 60)
-          const m = Math.floor(totalSec / 60)
-          const s = totalSec % 60
-          return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+          if (detail?.duration_seconds == null) return "–"
+          return `${Math.round(detail.duration_seconds / 60)} min`
         })()
         const started = detail?.stage_started
           ? format(parseISO(detail.stage_started), "yyyy-MM-dd HH:mm")

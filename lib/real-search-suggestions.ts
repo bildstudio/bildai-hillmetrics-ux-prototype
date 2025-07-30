@@ -23,19 +23,19 @@ export async function generateRealSearchSuggestions(query: string): Promise<Sear
   }
 
   try {
-    // Parallel API calls for better performance
+    // Only search flux data for now since other APIs don't exist
     const [
       fluxSuggestions,
-      fetchingSuggestions,
-      processingSuggestions,
-      contentSuggestions,
-      workflowSuggestions
+      // fetchingSuggestions,
+      // processingSuggestions,
+      // contentSuggestions,
+      // workflowSuggestions
     ] = await Promise.allSettled([
       searchFluxData(lowerQuery),
-      searchFetchingData(lowerQuery),
-      searchProcessingData(lowerQuery), 
-      searchContentData(lowerQuery),
-      searchWorkflowData(lowerQuery)
+      // searchFetchingData(lowerQuery),
+      // searchProcessingData(lowerQuery), 
+      // searchContentData(lowerQuery),
+      // searchWorkflowData(lowerQuery)
     ])
 
     // Add flux suggestions
@@ -43,25 +43,25 @@ export async function generateRealSearchSuggestions(query: string): Promise<Sear
       suggestions.push(...fluxSuggestions.value)
     }
 
-    // Add fetching suggestions
-    if (fetchingSuggestions.status === 'fulfilled') {
-      suggestions.push(...fetchingSuggestions.value)
-    }
+    // // Add fetching suggestions
+    // if (fetchingSuggestions.status === 'fulfilled') {
+    //   suggestions.push(...fetchingSuggestions.value)
+    // }
 
-    // Add processing suggestions
-    if (processingSuggestions.status === 'fulfilled') {
-      suggestions.push(...processingSuggestions.value)
-    }
+    // // Add processing suggestions
+    // if (processingSuggestions.status === 'fulfilled') {
+    //   suggestions.push(...processingSuggestions.value)
+    // }
 
-    // Add content suggestions
-    if (contentSuggestions.status === 'fulfilled') {
-      suggestions.push(...contentSuggestions.value)
-    }
+    // // Add content suggestions
+    // if (contentSuggestions.status === 'fulfilled') {
+    //   suggestions.push(...contentSuggestions.value)
+    // }
 
-    // Add workflow suggestions
-    if (workflowSuggestions.status === 'fulfilled') {
-      suggestions.push(...workflowSuggestions.value)
-    }
+    // // Add workflow suggestions
+    // if (workflowSuggestions.status === 'fulfilled') {
+    //   suggestions.push(...workflowSuggestions.value)
+    // }
 
     // Add smart filter suggestions based on query
     suggestions.push(...generateSmartFilters(lowerQuery))
@@ -76,7 +76,7 @@ export async function generateRealSearchSuggestions(query: string): Promise<Sear
 
 async function searchFluxData(query: string): Promise<SearchSuggestion[]> {
   try {
-    const response = await fetch(`/api/reports?search=${encodeURIComponent(query)}&pageSize=5`)
+    const response = await fetch(`/api/reports?q=${encodeURIComponent(query)}&pageSize=5`)
     const data = await response.json()
     
     if (!data.error && data.data) {
@@ -102,6 +102,14 @@ async function searchFetchingData(query: string): Promise<SearchSuggestion[]> {
     // Check if query is a number (fetchingID)
     if (/^\d+$/.test(query)) {
       const response = await fetch(`/api/fetching-history?fetchingID=${query}&pageSize=5`)
+      
+      // Check if response is actually JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('Fetching history API returned non-JSON response')
+        return []
+      }
+      
       const data = await response.json()
       
       if (!data.error && data.data && data.data.length > 0) {
@@ -166,47 +174,65 @@ async function searchProcessingData(query: string): Promise<SearchSuggestion[]> 
 }
 
 async function searchContentData(query: string): Promise<SearchSuggestion[]> {
-  try {
-    const response = await fetch(`/api/fetched-contents?search=${encodeURIComponent(query)}&pageSize=5`)
-    const data = await response.json()
-    
-    if (!data.error && data.data) {
-      return data.data.map((item: any) => ({
-        id: `content-${item.contentID}`,
-        title: item.contentName || `Content ${item.contentID}`,
-        description: `${item.fileType} • ${item.status}`,
-        category: 'content' as const,
-        icon: FileText,
-        value: item.contentName || item.contentID.toString(),
-        data: { contentID: item.contentID, ...item },
-        type: 'navigation' as const
-      }))
+  // API doesn't support search parameter, only return results if query looks like contentID
+  if (/^\d+$/.test(query)) {
+    try {
+      // Get recent content and filter by ID
+      const response = await fetch(`/api/fetched-contents?pageSize=50`)
+      const data = await response.json()
+      
+      if (!data.error && data.data) {
+        const filtered = data.data.filter((item: any) => 
+          item.contentID.toString().includes(query) ||
+          (item.contentName && item.contentName.toLowerCase().includes(query.toLowerCase()))
+        )
+        
+        return filtered.slice(0, 5).map((item: any) => ({
+          id: `content-${item.contentID}`,
+          title: item.contentName || `Content ${item.contentID}`,
+          description: `${item.fileType} • ${item.status}`,
+          category: 'content' as const,
+          icon: FileText,
+          value: item.contentName || item.contentID.toString(),
+          data: { contentID: item.contentID, ...item },
+          type: 'navigation' as const
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to search content data:', error)
     }
-  } catch (error) {
-    console.error('Failed to search content data:', error)
   }
   return []
 }
 
 async function searchWorkflowData(query: string): Promise<SearchSuggestion[]> {
-  try {
-    const response = await fetch(`/api/workflow-execution-log?search=${encodeURIComponent(query)}&pageSize=5`)
-    const data = await response.json()
-    
-    if (!data.error && data.data) {
-      return data.data.map((item: any) => ({
-        id: `workflow-${item.id}`,
-        title: `Workflow ${item.id}`,
-        description: `${item.flux_name || `Flux ${item.flux_id}`} • ${item.status}`,
-        category: 'workflow' as const,
-        icon: Activity,
-        value: item.flux_name || item.id.toString(),
-        data: { workflowID: item.id, ...item },
-        type: 'navigation' as const
-      }))
+  // API doesn't support search parameter, only return results if query looks like workflowID  
+  if (/^\d+$/.test(query)) {
+    try {
+      // Get recent workflows and filter by ID
+      const response = await fetch(`/api/workflow-execution-log?pageSize=50`)
+      const data = await response.json()
+      
+      if (!data.error && data.data) {
+        const filtered = data.data.filter((item: any) => 
+          item.id.toString().includes(query) ||
+          (item.flux_name && item.flux_name.toLowerCase().includes(query.toLowerCase()))
+        )
+        
+        return filtered.slice(0, 5).map((item: any) => ({
+          id: `workflow-${item.id}`,
+          title: `Workflow ${item.id}`,
+          description: `${item.flux_name || `Flux ${item.flux_id}`} • ${item.status}`,
+          category: 'workflow' as const,
+          icon: Activity,
+          value: item.flux_name || item.id.toString(),
+          data: { workflowID: item.id, ...item },
+          type: 'navigation' as const
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to search workflow data:', error)
     }
-  } catch (error) {
-    console.error('Failed to search workflow data:', error)
   }
   return []
 }
@@ -300,7 +326,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'fetching',
       icon: AlertCircle,
       value: 'status:Failed',
-      data: { field: 'status', operator: 'equals', value: 'Failed' },
+      data: { field: 'status', operator: 'equals', value: 'Failed', category: 'fetching' },
       type: 'filter'
     },
     {
@@ -310,39 +336,39 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'fetching',
       icon: CheckCircle,
       value: 'status:Success',
-      data: { field: 'status', operator: 'equals', value: 'Success' },
+      data: { field: 'status', operator: 'equals', value: 'Success', category: 'fetching' },
       type: 'filter'
     },
     {
       id: 'filter-in-progress',
       title: 'Currently processing',
       description: 'Items currently being processed',
-      category: 'processing',
+      category: 'fetching',
       icon: Clock,
       value: 'status:processing',
-      data: { field: 'status', operator: 'contains', value: 'processing' },
+      data: { field: 'status', operator: 'contains', value: 'processing', category: 'fetching' },
       type: 'filter'
     },
     
     // Time-based filters
     {
       id: 'filter-today',
-      title: 'Today',
+      title: "Today's activity",
       description: 'Items from today',
       category: 'fetching',
       icon: Calendar,
       value: 'date:today',
-      data: { field: 'timestamp', operator: 'date_range', value: 'today' },
+      data: { field: 'timestamp', operator: 'date_range', value: 'today', category: 'fetching' },
       type: 'filter'
     },
     {
       id: 'filter-this-week',
       title: 'This week',
       description: 'Items from this week',
-      category: 'workflow',
+      category: 'fetching',
       icon: Calendar,
       value: 'date:week',
-      data: { field: 'timestamp', operator: 'date_range', value: 'week' },
+      data: { field: 'timestamp', operator: 'date_range', value: 'week', category: 'fetching' },
       type: 'filter'
     },
     {
@@ -352,7 +378,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'fetching',
       icon: Clock,
       value: 'date:hour',
-      data: { field: 'timestamp', operator: 'date_range', value: 'hour' },
+      data: { field: 'timestamp', operator: 'date_range', value: 'hour', category: 'fetching' },
       type: 'filter'
     },
     
@@ -364,7 +390,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'content',
       icon: FileText,
       value: 'filetype:pdf',
-      data: { field: 'fileType', operator: 'equals', value: 'pdf' },
+      data: { field: 'fileType', operator: 'equals', value: 'pdf', category: 'content' },
       type: 'filter'
     },
     {
@@ -374,7 +400,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'content',
       icon: FileText,
       value: 'filetype:xlsx',
-      data: { field: 'fileType', operator: 'equals', value: 'xlsx' },
+      data: { field: 'fileType', operator: 'equals', value: 'xlsx', category: 'content' },
       type: 'filter'
     },
     {
@@ -384,7 +410,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'content',
       icon: FileText,
       value: 'size:>10mb',
-      data: { field: 'fileSize', operator: 'greaterThan', value: 10485760 },
+      data: { field: 'fileSize', operator: 'greaterThan', value: 10485760, category: 'content' },
       type: 'filter'
     },
     
@@ -396,7 +422,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'processing',
       icon: Clock,
       value: 'duration:>5min',
-      data: { field: 'durationBucket', operator: 'equals', value: '5+ minutes' },
+      data: { field: 'durationBucket', operator: 'equals', value: '5+ minutes', category: 'processing' },
       type: 'filter'
     },
     {
@@ -406,7 +432,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'processing',
       icon: TrendingUp,
       value: 'duration:<1min',
-      data: { field: 'durationBucket', operator: 'equals', value: '< 1 minute' },
+      data: { field: 'durationBucket', operator: 'equals', value: '< 1 minute', category: 'processing' },
       type: 'filter'
     },
     
@@ -418,7 +444,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'fetching',
       icon: AlertCircle,
       value: 'error:connection',
-      data: { field: 'errorType', operator: 'contains', value: 'connection' },
+      data: { field: 'errorType', operator: 'contains', value: 'connection', category: 'fetching' },
       type: 'filter'
     },
     {
@@ -428,7 +454,7 @@ function getRecentSuggestionsAndCommon(): SearchSuggestion[] {
       category: 'fetching',
       icon: Clock,
       value: 'error:timeout',
-      data: { field: 'errorType', operator: 'contains', value: 'timeout' },
+      data: { field: 'errorType', operator: 'contains', value: 'timeout', category: 'fetching' },
       type: 'filter'
     }
   ]

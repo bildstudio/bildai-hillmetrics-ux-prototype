@@ -65,7 +65,7 @@ export default function UnifiedSearch({
     // Add recent searches if no search term
     if (!searchTerm && recentSearches.length > 0) {
       groups.recent = recentSearches.slice(0, 3).map((search, index) => ({
-        id: `recent-${index}`,
+        id: `recent-${search}-${index}`,
         title: search,
         description: 'Recent search',
         category: 'recent' as const,
@@ -150,7 +150,10 @@ export default function UnifiedSearch({
                 variant="outline" 
                 size="sm" 
                 className="mt-2"
-                onClick={onShowAdvancedFilters}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onShowAdvancedFilters()
+                }}
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Try advanced filters
@@ -207,24 +210,29 @@ export default function UnifiedSearch({
           })}
 
           {/* All search results and Advanced filters suggestion */}
-          {searchTerm && !isLoading && (
+          {!isLoading && (
             <>
               <Separator className="my-2" />
               <div className="py-2">
-                <div
-                  onClick={onEnterKey}
-                  className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium">All search results for "{searchTerm}"</span>
-                    <p className="text-xs text-muted-foreground">
-                      Press ENTER
-                    </p>
+                {searchTerm && (
+                  <div
+                    onClick={onEnterKey}
+                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                  >
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">All search results for "{searchTerm}"</span>
+                      <p className="text-xs text-muted-foreground">
+                        Press ENTER
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div
-                  onClick={onShowAdvancedFilters}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onShowAdvancedFilters()
+                  }}
                   className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors"
                 >
                   <Filter className="h-4 w-4 text-muted-foreground" />
